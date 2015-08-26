@@ -11,9 +11,70 @@
 #include "smap.h"
 #include "uuid.h"
 
+/* AutoAttach table. */
+struct ovsrec_autoattach {
+	struct ovsdb_idl_row header_;
+
+	/* mappings column. */
+	int64_t *key_mappings;
+	int64_t *value_mappings;
+	size_t n_mappings;
+
+	/* system_description column. */
+	char *system_description;	/* Always nonnull. */
+
+	/* system_name column. */
+	char *system_name;	/* Always nonnull. */
+};
+
+enum {
+    OVSREC_AUTOATTACH_COL_MAPPINGS,
+    OVSREC_AUTOATTACH_COL_SYSTEM_DESCRIPTION,
+    OVSREC_AUTOATTACH_COL_SYSTEM_NAME,
+    OVSREC_AUTOATTACH_N_COLUMNS
+};
+
+#define ovsrec_autoattach_col_system_name (ovsrec_autoattach_columns[OVSREC_AUTOATTACH_COL_SYSTEM_NAME])
+#define ovsrec_autoattach_col_mappings (ovsrec_autoattach_columns[OVSREC_AUTOATTACH_COL_MAPPINGS])
+#define ovsrec_autoattach_col_system_description (ovsrec_autoattach_columns[OVSREC_AUTOATTACH_COL_SYSTEM_DESCRIPTION])
+
+extern struct ovsdb_idl_column ovsrec_autoattach_columns[OVSREC_AUTOATTACH_N_COLUMNS];
+
+const struct ovsrec_autoattach *ovsrec_autoattach_get_for_uuid(const struct ovsdb_idl *, const struct uuid *);
+const struct ovsrec_autoattach *ovsrec_autoattach_first(const struct ovsdb_idl *);
+const struct ovsrec_autoattach *ovsrec_autoattach_next(const struct ovsrec_autoattach *);
+#define OVSREC_AUTOATTACH_FOR_EACH(ROW, IDL) \
+        for ((ROW) = ovsrec_autoattach_first(IDL); \
+             (ROW); \
+             (ROW) = ovsrec_autoattach_next(ROW))
+#define OVSREC_AUTOATTACH_FOR_EACH_SAFE(ROW, NEXT, IDL) \
+        for ((ROW) = ovsrec_autoattach_first(IDL); \
+             (ROW) ? ((NEXT) = ovsrec_autoattach_next(ROW), 1) : 0; \
+             (ROW) = (NEXT))
+
+void ovsrec_autoattach_init(struct ovsrec_autoattach *);
+void ovsrec_autoattach_delete(const struct ovsrec_autoattach *);
+struct ovsrec_autoattach *ovsrec_autoattach_insert(struct ovsdb_idl_txn *);
+
+void ovsrec_autoattach_verify_mappings(const struct ovsrec_autoattach *);
+void ovsrec_autoattach_verify_system_description(const struct ovsrec_autoattach *);
+void ovsrec_autoattach_verify_system_name(const struct ovsrec_autoattach *);
+
+const struct ovsdb_datum *ovsrec_autoattach_get_mappings(const struct ovsrec_autoattach *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
+const struct ovsdb_datum *ovsrec_autoattach_get_system_description(const struct ovsrec_autoattach *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_autoattach_get_system_name(const struct ovsrec_autoattach *, enum ovsdb_atomic_type key_type);
+
+void ovsrec_autoattach_set_mappings(const struct ovsrec_autoattach *, const int64_t *key_mappings, const int64_t *value_mappings, size_t n_mappings);
+void ovsrec_autoattach_set_system_description(const struct ovsrec_autoattach *, const char *system_description);
+void ovsrec_autoattach_set_system_name(const struct ovsrec_autoattach *, const char *system_name);
+
+
 /* Bridge table. */
 struct ovsrec_bridge {
 	struct ovsdb_idl_row header_;
+
+	/* auto_attach column. */
+	struct ovsrec_autoattach *auto_attach;
 
 	/* controller column. */
 	struct ovsrec_controller **controller;
@@ -24,6 +85,9 @@ struct ovsrec_bridge {
 
 	/* datapath_type column. */
 	char *datapath_type;	/* Always nonnull. */
+
+	/* datapath_version column. */
+	char *datapath_version;	/* Always nonnull. */
 
 	/* external_ids column. */
 	struct smap external_ids;
@@ -42,6 +106,9 @@ struct ovsrec_bridge {
 
 	/* ipfix column. */
 	struct ovsrec_ipfix *ipfix;
+
+	/* mcast_snooping_enable column. */
+	bool mcast_snooping_enable;
 
 	/* mirrors column. */
 	struct ovsrec_mirror **mirrors;
@@ -64,6 +131,12 @@ struct ovsrec_bridge {
 	char **protocols;
 	size_t n_protocols;
 
+	/* rstp_enable column. */
+	bool rstp_enable;
+
+	/* rstp_status column. */
+	struct smap rstp_status;
+
 	/* sflow column. */
 	struct ovsrec_sflow *sflow;
 
@@ -75,43 +148,53 @@ struct ovsrec_bridge {
 };
 
 enum {
+    OVSREC_BRIDGE_COL_AUTO_ATTACH,
     OVSREC_BRIDGE_COL_CONTROLLER,
     OVSREC_BRIDGE_COL_DATAPATH_ID,
     OVSREC_BRIDGE_COL_DATAPATH_TYPE,
+    OVSREC_BRIDGE_COL_DATAPATH_VERSION,
     OVSREC_BRIDGE_COL_EXTERNAL_IDS,
     OVSREC_BRIDGE_COL_FAIL_MODE,
     OVSREC_BRIDGE_COL_FLOOD_VLANS,
     OVSREC_BRIDGE_COL_FLOW_TABLES,
     OVSREC_BRIDGE_COL_IPFIX,
+    OVSREC_BRIDGE_COL_MCAST_SNOOPING_ENABLE,
     OVSREC_BRIDGE_COL_MIRRORS,
     OVSREC_BRIDGE_COL_NAME,
     OVSREC_BRIDGE_COL_NETFLOW,
     OVSREC_BRIDGE_COL_OTHER_CONFIG,
     OVSREC_BRIDGE_COL_PORTS,
     OVSREC_BRIDGE_COL_PROTOCOLS,
+    OVSREC_BRIDGE_COL_RSTP_ENABLE,
+    OVSREC_BRIDGE_COL_RSTP_STATUS,
     OVSREC_BRIDGE_COL_SFLOW,
     OVSREC_BRIDGE_COL_STATUS,
     OVSREC_BRIDGE_COL_STP_ENABLE,
     OVSREC_BRIDGE_N_COLUMNS
 };
 
-#define ovsrec_bridge_col_status (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_STATUS])
-#define ovsrec_bridge_col_fail_mode (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_FAIL_MODE])
 #define ovsrec_bridge_col_datapath_id (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_DATAPATH_ID])
 #define ovsrec_bridge_col_datapath_type (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_DATAPATH_TYPE])
-#define ovsrec_bridge_col_sflow (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_SFLOW])
 #define ovsrec_bridge_col_mirrors (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_MIRRORS])
-#define ovsrec_bridge_col_ipfix (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_IPFIX])
-#define ovsrec_bridge_col_other_config (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_OTHER_CONFIG])
-#define ovsrec_bridge_col_flood_vlans (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_FLOOD_VLANS])
-#define ovsrec_bridge_col_controller (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_CONTROLLER])
-#define ovsrec_bridge_col_netflow (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_NETFLOW])
-#define ovsrec_bridge_col_stp_enable (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_STP_ENABLE])
-#define ovsrec_bridge_col_flow_tables (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_FLOW_TABLES])
+#define ovsrec_bridge_col_rstp_status (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_RSTP_STATUS])
 #define ovsrec_bridge_col_external_ids (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_EXTERNAL_IDS])
-#define ovsrec_bridge_col_ports (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_PORTS])
+#define ovsrec_bridge_col_rstp_enable (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_RSTP_ENABLE])
+#define ovsrec_bridge_col_flood_vlans (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_FLOOD_VLANS])
+#define ovsrec_bridge_col_datapath_version (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_DATAPATH_VERSION])
+#define ovsrec_bridge_col_status (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_STATUS])
+#define ovsrec_bridge_col_ipfix (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_IPFIX])
+#define ovsrec_bridge_col_controller (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_CONTROLLER])
+#define ovsrec_bridge_col_auto_attach (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_AUTO_ATTACH])
+#define ovsrec_bridge_col_mcast_snooping_enable (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_MCAST_SNOOPING_ENABLE])
+#define ovsrec_bridge_col_netflow (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_NETFLOW])
 #define ovsrec_bridge_col_protocols (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_PROTOCOLS])
+#define ovsrec_bridge_col_fail_mode (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_FAIL_MODE])
 #define ovsrec_bridge_col_name (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_NAME])
+#define ovsrec_bridge_col_sflow (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_SFLOW])
+#define ovsrec_bridge_col_other_config (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_OTHER_CONFIG])
+#define ovsrec_bridge_col_flow_tables (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_FLOW_TABLES])
+#define ovsrec_bridge_col_ports (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_PORTS])
+#define ovsrec_bridge_col_stp_enable (ovsrec_bridge_columns[OVSREC_BRIDGE_COL_STP_ENABLE])
 
 extern struct ovsdb_idl_column ovsrec_bridge_columns[OVSREC_BRIDGE_N_COLUMNS];
 
@@ -131,59 +214,71 @@ void ovsrec_bridge_init(struct ovsrec_bridge *);
 void ovsrec_bridge_delete(const struct ovsrec_bridge *);
 struct ovsrec_bridge *ovsrec_bridge_insert(struct ovsdb_idl_txn *);
 
+void ovsrec_bridge_verify_auto_attach(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_controller(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_datapath_id(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_datapath_type(const struct ovsrec_bridge *);
+void ovsrec_bridge_verify_datapath_version(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_external_ids(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_fail_mode(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_flood_vlans(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_flow_tables(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_ipfix(const struct ovsrec_bridge *);
+void ovsrec_bridge_verify_mcast_snooping_enable(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_mirrors(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_name(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_netflow(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_other_config(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_ports(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_protocols(const struct ovsrec_bridge *);
+void ovsrec_bridge_verify_rstp_enable(const struct ovsrec_bridge *);
+void ovsrec_bridge_verify_rstp_status(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_sflow(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_status(const struct ovsrec_bridge *);
 void ovsrec_bridge_verify_stp_enable(const struct ovsrec_bridge *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_bridge directly.) */
+const struct ovsdb_datum *ovsrec_bridge_get_auto_attach(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_controller(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_datapath_id(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_datapath_type(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_bridge_get_datapath_version(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_external_ids(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_bridge_get_fail_mode(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_flood_vlans(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_flow_tables(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_bridge_get_ipfix(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_bridge_get_mcast_snooping_enable(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_mirrors(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_name(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_netflow(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_other_config(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_bridge_get_ports(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_protocols(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_bridge_get_rstp_enable(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_bridge_get_rstp_status(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_bridge_get_sflow(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_bridge_get_status(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_bridge_get_stp_enable(const struct ovsrec_bridge *, enum ovsdb_atomic_type key_type);
 
+void ovsrec_bridge_set_auto_attach(const struct ovsrec_bridge *, const struct ovsrec_autoattach *auto_attach);
 void ovsrec_bridge_set_controller(const struct ovsrec_bridge *, struct ovsrec_controller **controller, size_t n_controller);
 void ovsrec_bridge_set_datapath_id(const struct ovsrec_bridge *, const char *datapath_id);
 void ovsrec_bridge_set_datapath_type(const struct ovsrec_bridge *, const char *datapath_type);
+void ovsrec_bridge_set_datapath_version(const struct ovsrec_bridge *, const char *datapath_version);
 void ovsrec_bridge_set_external_ids(const struct ovsrec_bridge *, const struct smap *);
 void ovsrec_bridge_set_fail_mode(const struct ovsrec_bridge *, const char *fail_mode);
 void ovsrec_bridge_set_flood_vlans(const struct ovsrec_bridge *, const int64_t *flood_vlans, size_t n_flood_vlans);
 void ovsrec_bridge_set_flow_tables(const struct ovsrec_bridge *, const int64_t *key_flow_tables, struct ovsrec_flow_table **value_flow_tables, size_t n_flow_tables);
 void ovsrec_bridge_set_ipfix(const struct ovsrec_bridge *, const struct ovsrec_ipfix *ipfix);
+void ovsrec_bridge_set_mcast_snooping_enable(const struct ovsrec_bridge *, bool mcast_snooping_enable);
 void ovsrec_bridge_set_mirrors(const struct ovsrec_bridge *, struct ovsrec_mirror **mirrors, size_t n_mirrors);
 void ovsrec_bridge_set_name(const struct ovsrec_bridge *, const char *name);
 void ovsrec_bridge_set_netflow(const struct ovsrec_bridge *, const struct ovsrec_netflow *netflow);
 void ovsrec_bridge_set_other_config(const struct ovsrec_bridge *, const struct smap *);
 void ovsrec_bridge_set_ports(const struct ovsrec_bridge *, struct ovsrec_port **ports, size_t n_ports);
-void ovsrec_bridge_set_protocols(const struct ovsrec_bridge *, char **protocols, size_t n_protocols);
+void ovsrec_bridge_set_protocols(const struct ovsrec_bridge *, const char **protocols, size_t n_protocols);
+void ovsrec_bridge_set_rstp_enable(const struct ovsrec_bridge *, bool rstp_enable);
+void ovsrec_bridge_set_rstp_status(const struct ovsrec_bridge *, const struct smap *);
 void ovsrec_bridge_set_sflow(const struct ovsrec_bridge *, const struct ovsrec_sflow *sflow);
 void ovsrec_bridge_set_status(const struct ovsrec_bridge *, const struct smap *);
 void ovsrec_bridge_set_stp_enable(const struct ovsrec_bridge *, bool stp_enable);
@@ -313,9 +408,6 @@ void ovsrec_controller_verify_role(const struct ovsrec_controller *);
 void ovsrec_controller_verify_status(const struct ovsrec_controller *);
 void ovsrec_controller_verify_target(const struct ovsrec_controller *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_controller directly.) */
 const struct ovsdb_datum *ovsrec_controller_get_connection_mode(const struct ovsrec_controller *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_controller_get_controller_burst_limit(const struct ovsrec_controller *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_controller_get_controller_rate_limit(const struct ovsrec_controller *, enum ovsdb_atomic_type key_type);
@@ -402,9 +494,6 @@ void ovsrec_flow_sample_collector_set_verify_external_ids(const struct ovsrec_fl
 void ovsrec_flow_sample_collector_set_verify_id(const struct ovsrec_flow_sample_collector_set *);
 void ovsrec_flow_sample_collector_set_verify_ipfix(const struct ovsrec_flow_sample_collector_set *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_flow_sample_collector_set directly.) */
 const struct ovsdb_datum *ovsrec_flow_sample_collector_set_get_bridge(const struct ovsrec_flow_sample_collector_set *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_flow_sample_collector_set_get_external_ids(const struct ovsrec_flow_sample_collector_set *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_flow_sample_collector_set_get_id(const struct ovsrec_flow_sample_collector_set *, enum ovsdb_atomic_type key_type);
@@ -484,9 +573,6 @@ void ovsrec_flow_table_verify_name(const struct ovsrec_flow_table *);
 void ovsrec_flow_table_verify_overflow_policy(const struct ovsrec_flow_table *);
 void ovsrec_flow_table_verify_prefixes(const struct ovsrec_flow_table *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_flow_table directly.) */
 const struct ovsdb_datum *ovsrec_flow_table_get_external_ids(const struct ovsrec_flow_table *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_flow_table_get_flow_limit(const struct ovsrec_flow_table *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_flow_table_get_groups(const struct ovsrec_flow_table *, enum ovsdb_atomic_type key_type);
@@ -496,10 +582,10 @@ const struct ovsdb_datum *ovsrec_flow_table_get_prefixes(const struct ovsrec_flo
 
 void ovsrec_flow_table_set_external_ids(const struct ovsrec_flow_table *, const struct smap *);
 void ovsrec_flow_table_set_flow_limit(const struct ovsrec_flow_table *, const int64_t *flow_limit, size_t n_flow_limit);
-void ovsrec_flow_table_set_groups(const struct ovsrec_flow_table *, char **groups, size_t n_groups);
+void ovsrec_flow_table_set_groups(const struct ovsrec_flow_table *, const char **groups, size_t n_groups);
 void ovsrec_flow_table_set_name(const struct ovsrec_flow_table *, const char *name);
 void ovsrec_flow_table_set_overflow_policy(const struct ovsrec_flow_table *, const char *overflow_policy);
-void ovsrec_flow_table_set_prefixes(const struct ovsrec_flow_table *, char **prefixes, size_t n_prefixes);
+void ovsrec_flow_table_set_prefixes(const struct ovsrec_flow_table *, const char **prefixes, size_t n_prefixes);
 
 
 /* IPFIX table. */
@@ -525,6 +611,9 @@ struct ovsrec_ipfix {
 	int64_t *obs_point_id;
 	size_t n_obs_point_id;
 
+	/* other_config column. */
+	struct smap other_config;
+
 	/* sampling column. */
 	int64_t *sampling;
 	size_t n_sampling;
@@ -540,6 +629,7 @@ enum {
     OVSREC_IPFIX_COL_EXTERNAL_IDS,
     OVSREC_IPFIX_COL_OBS_DOMAIN_ID,
     OVSREC_IPFIX_COL_OBS_POINT_ID,
+    OVSREC_IPFIX_COL_OTHER_CONFIG,
     OVSREC_IPFIX_COL_SAMPLING,
     OVSREC_IPFIX_COL_TARGETS,
     OVSREC_IPFIX_N_COLUMNS
@@ -549,8 +639,9 @@ enum {
 #define ovsrec_ipfix_col_cache_active_timeout (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_CACHE_ACTIVE_TIMEOUT])
 #define ovsrec_ipfix_col_cache_max_flows (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_CACHE_MAX_FLOWS])
 #define ovsrec_ipfix_col_obs_domain_id (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_OBS_DOMAIN_ID])
-#define ovsrec_ipfix_col_sampling (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_SAMPLING])
+#define ovsrec_ipfix_col_other_config (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_OTHER_CONFIG])
 #define ovsrec_ipfix_col_external_ids (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_EXTERNAL_IDS])
+#define ovsrec_ipfix_col_sampling (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_SAMPLING])
 #define ovsrec_ipfix_col_targets (ovsrec_ipfix_columns[OVSREC_IPFIX_COL_TARGETS])
 
 extern struct ovsdb_idl_column ovsrec_ipfix_columns[OVSREC_IPFIX_N_COLUMNS];
@@ -576,17 +667,16 @@ void ovsrec_ipfix_verify_cache_max_flows(const struct ovsrec_ipfix *);
 void ovsrec_ipfix_verify_external_ids(const struct ovsrec_ipfix *);
 void ovsrec_ipfix_verify_obs_domain_id(const struct ovsrec_ipfix *);
 void ovsrec_ipfix_verify_obs_point_id(const struct ovsrec_ipfix *);
+void ovsrec_ipfix_verify_other_config(const struct ovsrec_ipfix *);
 void ovsrec_ipfix_verify_sampling(const struct ovsrec_ipfix *);
 void ovsrec_ipfix_verify_targets(const struct ovsrec_ipfix *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_ipfix directly.) */
 const struct ovsdb_datum *ovsrec_ipfix_get_cache_active_timeout(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_ipfix_get_cache_max_flows(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_ipfix_get_external_ids(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_ipfix_get_obs_domain_id(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_ipfix_get_obs_point_id(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_ipfix_get_other_config(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_ipfix_get_sampling(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_ipfix_get_targets(const struct ovsrec_ipfix *, enum ovsdb_atomic_type key_type);
 
@@ -595,8 +685,9 @@ void ovsrec_ipfix_set_cache_max_flows(const struct ovsrec_ipfix *, const int64_t
 void ovsrec_ipfix_set_external_ids(const struct ovsrec_ipfix *, const struct smap *);
 void ovsrec_ipfix_set_obs_domain_id(const struct ovsrec_ipfix *, const int64_t *obs_domain_id, size_t n_obs_domain_id);
 void ovsrec_ipfix_set_obs_point_id(const struct ovsrec_ipfix *, const int64_t *obs_point_id, size_t n_obs_point_id);
+void ovsrec_ipfix_set_other_config(const struct ovsrec_ipfix *, const struct smap *);
 void ovsrec_ipfix_set_sampling(const struct ovsrec_ipfix *, const int64_t *sampling, size_t n_sampling);
-void ovsrec_ipfix_set_targets(const struct ovsrec_ipfix *, char **targets, size_t n_targets);
+void ovsrec_ipfix_set_targets(const struct ovsrec_ipfix *, const char **targets, size_t n_targets);
 
 
 /* Interface table. */
@@ -642,6 +733,9 @@ struct ovsrec_interface {
 	/* duplex column. */
 	char *duplex;
 
+	/* error column. */
+	char *error;
+
 	/* external_ids column. */
 	struct smap external_ids;
 
@@ -669,6 +763,9 @@ struct ovsrec_interface {
 
 	/* link_state column. */
 	char *link_state;
+
+	/* lldp column. */
+	struct smap lldp;
 
 	/* mac column. */
 	char *mac;
@@ -721,6 +818,7 @@ enum {
     OVSREC_INTERFACE_COL_CFM_REMOTE_MPIDS,
     OVSREC_INTERFACE_COL_CFM_REMOTE_OPSTATE,
     OVSREC_INTERFACE_COL_DUPLEX,
+    OVSREC_INTERFACE_COL_ERROR,
     OVSREC_INTERFACE_COL_EXTERNAL_IDS,
     OVSREC_INTERFACE_COL_IFINDEX,
     OVSREC_INTERFACE_COL_INGRESS_POLICING_BURST,
@@ -729,6 +827,7 @@ enum {
     OVSREC_INTERFACE_COL_LINK_RESETS,
     OVSREC_INTERFACE_COL_LINK_SPEED,
     OVSREC_INTERFACE_COL_LINK_STATE,
+    OVSREC_INTERFACE_COL_LLDP,
     OVSREC_INTERFACE_COL_MAC,
     OVSREC_INTERFACE_COL_MAC_IN_USE,
     OVSREC_INTERFACE_COL_MTU,
@@ -752,13 +851,15 @@ enum {
 #define ovsrec_interface_col_statistics (ovsrec_interface_columns[OVSREC_INTERFACE_COL_STATISTICS])
 #define ovsrec_interface_col_bfd (ovsrec_interface_columns[OVSREC_INTERFACE_COL_BFD])
 #define ovsrec_interface_col_duplex (ovsrec_interface_columns[OVSREC_INTERFACE_COL_DUPLEX])
-#define ovsrec_interface_col_cfm_health (ovsrec_interface_columns[OVSREC_INTERFACE_COL_CFM_HEALTH])
+#define ovsrec_interface_col_mac_in_use (ovsrec_interface_columns[OVSREC_INTERFACE_COL_MAC_IN_USE])
 #define ovsrec_interface_col_bfd_status (ovsrec_interface_columns[OVSREC_INTERFACE_COL_BFD_STATUS])
 #define ovsrec_interface_col_type (ovsrec_interface_columns[OVSREC_INTERFACE_COL_TYPE])
 #define ovsrec_interface_col_lacp_current (ovsrec_interface_columns[OVSREC_INTERFACE_COL_LACP_CURRENT])
 #define ovsrec_interface_col_status (ovsrec_interface_columns[OVSREC_INTERFACE_COL_STATUS])
+#define ovsrec_interface_col_lldp (ovsrec_interface_columns[OVSREC_INTERFACE_COL_LLDP])
 #define ovsrec_interface_col_ingress_policing_burst (ovsrec_interface_columns[OVSREC_INTERFACE_COL_INGRESS_POLICING_BURST])
-#define ovsrec_interface_col_mac_in_use (ovsrec_interface_columns[OVSREC_INTERFACE_COL_MAC_IN_USE])
+#define ovsrec_interface_col_cfm_health (ovsrec_interface_columns[OVSREC_INTERFACE_COL_CFM_HEALTH])
+#define ovsrec_interface_col_error (ovsrec_interface_columns[OVSREC_INTERFACE_COL_ERROR])
 #define ovsrec_interface_col_mac (ovsrec_interface_columns[OVSREC_INTERFACE_COL_MAC])
 #define ovsrec_interface_col_admin_state (ovsrec_interface_columns[OVSREC_INTERFACE_COL_ADMIN_STATE])
 #define ovsrec_interface_col_external_ids (ovsrec_interface_columns[OVSREC_INTERFACE_COL_EXTERNAL_IDS])
@@ -803,6 +904,7 @@ void ovsrec_interface_verify_cfm_mpid(const struct ovsrec_interface *);
 void ovsrec_interface_verify_cfm_remote_mpids(const struct ovsrec_interface *);
 void ovsrec_interface_verify_cfm_remote_opstate(const struct ovsrec_interface *);
 void ovsrec_interface_verify_duplex(const struct ovsrec_interface *);
+void ovsrec_interface_verify_error(const struct ovsrec_interface *);
 void ovsrec_interface_verify_external_ids(const struct ovsrec_interface *);
 void ovsrec_interface_verify_ifindex(const struct ovsrec_interface *);
 void ovsrec_interface_verify_ingress_policing_burst(const struct ovsrec_interface *);
@@ -811,6 +913,7 @@ void ovsrec_interface_verify_lacp_current(const struct ovsrec_interface *);
 void ovsrec_interface_verify_link_resets(const struct ovsrec_interface *);
 void ovsrec_interface_verify_link_speed(const struct ovsrec_interface *);
 void ovsrec_interface_verify_link_state(const struct ovsrec_interface *);
+void ovsrec_interface_verify_lldp(const struct ovsrec_interface *);
 void ovsrec_interface_verify_mac(const struct ovsrec_interface *);
 void ovsrec_interface_verify_mac_in_use(const struct ovsrec_interface *);
 void ovsrec_interface_verify_mtu(const struct ovsrec_interface *);
@@ -823,9 +926,6 @@ void ovsrec_interface_verify_statistics(const struct ovsrec_interface *);
 void ovsrec_interface_verify_status(const struct ovsrec_interface *);
 void ovsrec_interface_verify_type(const struct ovsrec_interface *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_interface directly.) */
 const struct ovsdb_datum *ovsrec_interface_get_admin_state(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_bfd(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_interface_get_bfd_status(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
@@ -837,6 +937,7 @@ const struct ovsdb_datum *ovsrec_interface_get_cfm_mpid(const struct ovsrec_inte
 const struct ovsdb_datum *ovsrec_interface_get_cfm_remote_mpids(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_cfm_remote_opstate(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_duplex(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_interface_get_error(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_external_ids(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_interface_get_ifindex(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_ingress_policing_burst(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
@@ -845,6 +946,7 @@ const struct ovsdb_datum *ovsrec_interface_get_lacp_current(const struct ovsrec_
 const struct ovsdb_datum *ovsrec_interface_get_link_resets(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_link_speed(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_link_state(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_interface_get_lldp(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_interface_get_mac(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_mac_in_use(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_interface_get_mtu(const struct ovsrec_interface *, enum ovsdb_atomic_type key_type);
@@ -861,13 +963,14 @@ void ovsrec_interface_set_admin_state(const struct ovsrec_interface *, const cha
 void ovsrec_interface_set_bfd(const struct ovsrec_interface *, const struct smap *);
 void ovsrec_interface_set_bfd_status(const struct ovsrec_interface *, const struct smap *);
 void ovsrec_interface_set_cfm_fault(const struct ovsrec_interface *, const bool *cfm_fault, size_t n_cfm_fault);
-void ovsrec_interface_set_cfm_fault_status(const struct ovsrec_interface *, char **cfm_fault_status, size_t n_cfm_fault_status);
+void ovsrec_interface_set_cfm_fault_status(const struct ovsrec_interface *, const char **cfm_fault_status, size_t n_cfm_fault_status);
 void ovsrec_interface_set_cfm_flap_count(const struct ovsrec_interface *, const int64_t *cfm_flap_count, size_t n_cfm_flap_count);
 void ovsrec_interface_set_cfm_health(const struct ovsrec_interface *, const int64_t *cfm_health, size_t n_cfm_health);
 void ovsrec_interface_set_cfm_mpid(const struct ovsrec_interface *, const int64_t *cfm_mpid, size_t n_cfm_mpid);
 void ovsrec_interface_set_cfm_remote_mpids(const struct ovsrec_interface *, const int64_t *cfm_remote_mpids, size_t n_cfm_remote_mpids);
 void ovsrec_interface_set_cfm_remote_opstate(const struct ovsrec_interface *, const char *cfm_remote_opstate);
 void ovsrec_interface_set_duplex(const struct ovsrec_interface *, const char *duplex);
+void ovsrec_interface_set_error(const struct ovsrec_interface *, const char *error);
 void ovsrec_interface_set_external_ids(const struct ovsrec_interface *, const struct smap *);
 void ovsrec_interface_set_ifindex(const struct ovsrec_interface *, const int64_t *ifindex, size_t n_ifindex);
 void ovsrec_interface_set_ingress_policing_burst(const struct ovsrec_interface *, int64_t ingress_policing_burst);
@@ -876,6 +979,7 @@ void ovsrec_interface_set_lacp_current(const struct ovsrec_interface *, const bo
 void ovsrec_interface_set_link_resets(const struct ovsrec_interface *, const int64_t *link_resets, size_t n_link_resets);
 void ovsrec_interface_set_link_speed(const struct ovsrec_interface *, const int64_t *link_speed, size_t n_link_speed);
 void ovsrec_interface_set_link_state(const struct ovsrec_interface *, const char *link_state);
+void ovsrec_interface_set_lldp(const struct ovsrec_interface *, const struct smap *);
 void ovsrec_interface_set_mac(const struct ovsrec_interface *, const char *mac);
 void ovsrec_interface_set_mac_in_use(const struct ovsrec_interface *, const char *mac_in_use);
 void ovsrec_interface_set_mtu(const struct ovsrec_interface *, const int64_t *mtu, size_t n_mtu);
@@ -884,7 +988,7 @@ void ovsrec_interface_set_ofport(const struct ovsrec_interface *, const int64_t 
 void ovsrec_interface_set_ofport_request(const struct ovsrec_interface *, const int64_t *ofport_request, size_t n_ofport_request);
 void ovsrec_interface_set_options(const struct ovsrec_interface *, const struct smap *);
 void ovsrec_interface_set_other_config(const struct ovsrec_interface *, const struct smap *);
-void ovsrec_interface_set_statistics(const struct ovsrec_interface *, char **key_statistics, const int64_t *value_statistics, size_t n_statistics);
+void ovsrec_interface_set_statistics(const struct ovsrec_interface *, const char **key_statistics, const int64_t *value_statistics, size_t n_statistics);
 void ovsrec_interface_set_status(const struct ovsrec_interface *, const struct smap *);
 void ovsrec_interface_set_type(const struct ovsrec_interface *, const char *type);
 
@@ -968,9 +1072,6 @@ void ovsrec_manager_verify_other_config(const struct ovsrec_manager *);
 void ovsrec_manager_verify_status(const struct ovsrec_manager *);
 void ovsrec_manager_verify_target(const struct ovsrec_manager *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_manager directly.) */
 const struct ovsdb_datum *ovsrec_manager_get_connection_mode(const struct ovsrec_manager *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_manager_get_external_ids(const struct ovsrec_manager *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_manager_get_inactivity_probe(const struct ovsrec_manager *, enum ovsdb_atomic_type key_type);
@@ -1079,9 +1180,6 @@ void ovsrec_mirror_verify_select_src_port(const struct ovsrec_mirror *);
 void ovsrec_mirror_verify_select_vlan(const struct ovsrec_mirror *);
 void ovsrec_mirror_verify_statistics(const struct ovsrec_mirror *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_mirror directly.) */
 const struct ovsdb_datum *ovsrec_mirror_get_external_ids(const struct ovsrec_mirror *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_mirror_get_name(const struct ovsrec_mirror *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_mirror_get_output_port(const struct ovsrec_mirror *, enum ovsdb_atomic_type key_type);
@@ -1100,7 +1198,7 @@ void ovsrec_mirror_set_select_all(const struct ovsrec_mirror *, bool select_all)
 void ovsrec_mirror_set_select_dst_port(const struct ovsrec_mirror *, struct ovsrec_port **select_dst_port, size_t n_select_dst_port);
 void ovsrec_mirror_set_select_src_port(const struct ovsrec_mirror *, struct ovsrec_port **select_src_port, size_t n_select_src_port);
 void ovsrec_mirror_set_select_vlan(const struct ovsrec_mirror *, const int64_t *select_vlan, size_t n_select_vlan);
-void ovsrec_mirror_set_statistics(const struct ovsrec_mirror *, char **key_statistics, const int64_t *value_statistics, size_t n_statistics);
+void ovsrec_mirror_set_statistics(const struct ovsrec_mirror *, const char **key_statistics, const int64_t *value_statistics, size_t n_statistics);
 
 
 /* NetFlow table. */
@@ -1171,9 +1269,6 @@ void ovsrec_netflow_verify_engine_type(const struct ovsrec_netflow *);
 void ovsrec_netflow_verify_external_ids(const struct ovsrec_netflow *);
 void ovsrec_netflow_verify_targets(const struct ovsrec_netflow *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_netflow directly.) */
 const struct ovsdb_datum *ovsrec_netflow_get_active_timeout(const struct ovsrec_netflow *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_netflow_get_add_id_to_interface(const struct ovsrec_netflow *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_netflow_get_engine_id(const struct ovsrec_netflow *, enum ovsdb_atomic_type key_type);
@@ -1186,7 +1281,7 @@ void ovsrec_netflow_set_add_id_to_interface(const struct ovsrec_netflow *, bool 
 void ovsrec_netflow_set_engine_id(const struct ovsrec_netflow *, const int64_t *engine_id, size_t n_engine_id);
 void ovsrec_netflow_set_engine_type(const struct ovsrec_netflow *, const int64_t *engine_type, size_t n_engine_type);
 void ovsrec_netflow_set_external_ids(const struct ovsrec_netflow *, const struct smap *);
-void ovsrec_netflow_set_targets(const struct ovsrec_netflow *, char **targets, size_t n_targets);
+void ovsrec_netflow_set_targets(const struct ovsrec_netflow *, const char **targets, size_t n_targets);
 
 
 /* Open_vSwitch table. */
@@ -1200,11 +1295,19 @@ struct ovsrec_open_vswitch {
 	/* cur_cfg column. */
 	int64_t cur_cfg;
 
+	/* datapath_types column. */
+	char **datapath_types;
+	size_t n_datapath_types;
+
 	/* db_version column. */
 	char *db_version;
 
 	/* external_ids column. */
 	struct smap external_ids;
+
+	/* iface_types column. */
+	char **iface_types;
+	size_t n_iface_types;
 
 	/* manager_options column. */
 	struct ovsrec_manager **manager_options;
@@ -1235,8 +1338,10 @@ struct ovsrec_open_vswitch {
 enum {
     OVSREC_OPEN_VSWITCH_COL_BRIDGES,
     OVSREC_OPEN_VSWITCH_COL_CUR_CFG,
+    OVSREC_OPEN_VSWITCH_COL_DATAPATH_TYPES,
     OVSREC_OPEN_VSWITCH_COL_DB_VERSION,
     OVSREC_OPEN_VSWITCH_COL_EXTERNAL_IDS,
+    OVSREC_OPEN_VSWITCH_COL_IFACE_TYPES,
     OVSREC_OPEN_VSWITCH_COL_MANAGER_OPTIONS,
     OVSREC_OPEN_VSWITCH_COL_NEXT_CFG,
     OVSREC_OPEN_VSWITCH_COL_OTHER_CONFIG,
@@ -1248,18 +1353,20 @@ enum {
     OVSREC_OPEN_VSWITCH_N_COLUMNS
 };
 
-#define ovsrec_open_vswitch_col_bridges (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_BRIDGES])
-#define ovsrec_open_vswitch_col_statistics (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_STATISTICS])
 #define ovsrec_open_vswitch_col_db_version (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_DB_VERSION])
+#define ovsrec_open_vswitch_col_statistics (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_STATISTICS])
+#define ovsrec_open_vswitch_col_datapath_types (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_DATAPATH_TYPES])
+#define ovsrec_open_vswitch_col_iface_types (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_IFACE_TYPES])
 #define ovsrec_open_vswitch_col_next_cfg (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_NEXT_CFG])
 #define ovsrec_open_vswitch_col_ovs_version (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_OVS_VERSION])
 #define ovsrec_open_vswitch_col_other_config (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_OTHER_CONFIG])
 #define ovsrec_open_vswitch_col_ssl (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_SSL])
-#define ovsrec_open_vswitch_col_manager_options (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_MANAGER_OPTIONS])
+#define ovsrec_open_vswitch_col_bridges (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_BRIDGES])
 #define ovsrec_open_vswitch_col_external_ids (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_EXTERNAL_IDS])
+#define ovsrec_open_vswitch_col_system_type (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_SYSTEM_TYPE])
 #define ovsrec_open_vswitch_col_system_version (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_SYSTEM_VERSION])
 #define ovsrec_open_vswitch_col_cur_cfg (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_CUR_CFG])
-#define ovsrec_open_vswitch_col_system_type (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_SYSTEM_TYPE])
+#define ovsrec_open_vswitch_col_manager_options (ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_COL_MANAGER_OPTIONS])
 
 extern struct ovsdb_idl_column ovsrec_open_vswitch_columns[OVSREC_OPEN_VSWITCH_N_COLUMNS];
 
@@ -1281,8 +1388,10 @@ struct ovsrec_open_vswitch *ovsrec_open_vswitch_insert(struct ovsdb_idl_txn *);
 
 void ovsrec_open_vswitch_verify_bridges(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_cur_cfg(const struct ovsrec_open_vswitch *);
+void ovsrec_open_vswitch_verify_datapath_types(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_db_version(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_external_ids(const struct ovsrec_open_vswitch *);
+void ovsrec_open_vswitch_verify_iface_types(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_manager_options(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_next_cfg(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_other_config(const struct ovsrec_open_vswitch *);
@@ -1292,13 +1401,12 @@ void ovsrec_open_vswitch_verify_statistics(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_system_type(const struct ovsrec_open_vswitch *);
 void ovsrec_open_vswitch_verify_system_version(const struct ovsrec_open_vswitch *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_open_vswitch directly.) */
 const struct ovsdb_datum *ovsrec_open_vswitch_get_bridges(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_open_vswitch_get_cur_cfg(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_open_vswitch_get_datapath_types(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_open_vswitch_get_db_version(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_open_vswitch_get_external_ids(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
+const struct ovsdb_datum *ovsrec_open_vswitch_get_iface_types(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_open_vswitch_get_manager_options(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_open_vswitch_get_next_cfg(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_open_vswitch_get_other_config(const struct ovsrec_open_vswitch *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
@@ -1310,8 +1418,10 @@ const struct ovsdb_datum *ovsrec_open_vswitch_get_system_version(const struct ov
 
 void ovsrec_open_vswitch_set_bridges(const struct ovsrec_open_vswitch *, struct ovsrec_bridge **bridges, size_t n_bridges);
 void ovsrec_open_vswitch_set_cur_cfg(const struct ovsrec_open_vswitch *, int64_t cur_cfg);
+void ovsrec_open_vswitch_set_datapath_types(const struct ovsrec_open_vswitch *, const char **datapath_types, size_t n_datapath_types);
 void ovsrec_open_vswitch_set_db_version(const struct ovsrec_open_vswitch *, const char *db_version);
 void ovsrec_open_vswitch_set_external_ids(const struct ovsrec_open_vswitch *, const struct smap *);
+void ovsrec_open_vswitch_set_iface_types(const struct ovsrec_open_vswitch *, const char **iface_types, size_t n_iface_types);
 void ovsrec_open_vswitch_set_manager_options(const struct ovsrec_open_vswitch *, struct ovsrec_manager **manager_options, size_t n_manager_options);
 void ovsrec_open_vswitch_set_next_cfg(const struct ovsrec_open_vswitch *, int64_t next_cfg);
 void ovsrec_open_vswitch_set_other_config(const struct ovsrec_open_vswitch *, const struct smap *);
@@ -1366,6 +1476,14 @@ struct ovsrec_port {
 	/* qos column. */
 	struct ovsrec_qos *qos;
 
+	/* rstp_statistics column. */
+	char **key_rstp_statistics;
+	int64_t *value_rstp_statistics;
+	size_t n_rstp_statistics;
+
+	/* rstp_status column. */
+	struct smap rstp_status;
+
 	/* statistics column. */
 	char **key_statistics;
 	int64_t *value_statistics;
@@ -1400,6 +1518,8 @@ enum {
     OVSREC_PORT_COL_NAME,
     OVSREC_PORT_COL_OTHER_CONFIG,
     OVSREC_PORT_COL_QOS,
+    OVSREC_PORT_COL_RSTP_STATISTICS,
+    OVSREC_PORT_COL_RSTP_STATUS,
     OVSREC_PORT_COL_STATISTICS,
     OVSREC_PORT_COL_STATUS,
     OVSREC_PORT_COL_TAG,
@@ -1415,10 +1535,12 @@ enum {
 #define ovsrec_port_col_bond_downdelay (ovsrec_port_columns[OVSREC_PORT_COL_BOND_DOWNDELAY])
 #define ovsrec_port_col_interfaces (ovsrec_port_columns[OVSREC_PORT_COL_INTERFACES])
 #define ovsrec_port_col_other_config (ovsrec_port_columns[OVSREC_PORT_COL_OTHER_CONFIG])
-#define ovsrec_port_col_bond_active_slave (ovsrec_port_columns[OVSREC_PORT_COL_BOND_ACTIVE_SLAVE])
 #define ovsrec_port_col_bond_fake_iface (ovsrec_port_columns[OVSREC_PORT_COL_BOND_FAKE_IFACE])
-#define ovsrec_port_col_lacp (ovsrec_port_columns[OVSREC_PORT_COL_LACP])
 #define ovsrec_port_col_mac (ovsrec_port_columns[OVSREC_PORT_COL_MAC])
+#define ovsrec_port_col_bond_active_slave (ovsrec_port_columns[OVSREC_PORT_COL_BOND_ACTIVE_SLAVE])
+#define ovsrec_port_col_lacp (ovsrec_port_columns[OVSREC_PORT_COL_LACP])
+#define ovsrec_port_col_rstp_status (ovsrec_port_columns[OVSREC_PORT_COL_RSTP_STATUS])
+#define ovsrec_port_col_rstp_statistics (ovsrec_port_columns[OVSREC_PORT_COL_RSTP_STATISTICS])
 #define ovsrec_port_col_tag (ovsrec_port_columns[OVSREC_PORT_COL_TAG])
 #define ovsrec_port_col_trunks (ovsrec_port_columns[OVSREC_PORT_COL_TRUNKS])
 #define ovsrec_port_col_vlan_mode (ovsrec_port_columns[OVSREC_PORT_COL_VLAN_MODE])
@@ -1458,15 +1580,14 @@ void ovsrec_port_verify_mac(const struct ovsrec_port *);
 void ovsrec_port_verify_name(const struct ovsrec_port *);
 void ovsrec_port_verify_other_config(const struct ovsrec_port *);
 void ovsrec_port_verify_qos(const struct ovsrec_port *);
+void ovsrec_port_verify_rstp_statistics(const struct ovsrec_port *);
+void ovsrec_port_verify_rstp_status(const struct ovsrec_port *);
 void ovsrec_port_verify_statistics(const struct ovsrec_port *);
 void ovsrec_port_verify_status(const struct ovsrec_port *);
 void ovsrec_port_verify_tag(const struct ovsrec_port *);
 void ovsrec_port_verify_trunks(const struct ovsrec_port *);
 void ovsrec_port_verify_vlan_mode(const struct ovsrec_port *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_port directly.) */
 const struct ovsdb_datum *ovsrec_port_get_bond_active_slave(const struct ovsrec_port *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_port_get_bond_downdelay(const struct ovsrec_port *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_port_get_bond_fake_iface(const struct ovsrec_port *, enum ovsdb_atomic_type key_type);
@@ -1480,6 +1601,8 @@ const struct ovsdb_datum *ovsrec_port_get_mac(const struct ovsrec_port *, enum o
 const struct ovsdb_datum *ovsrec_port_get_name(const struct ovsrec_port *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_port_get_other_config(const struct ovsrec_port *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_port_get_qos(const struct ovsrec_port *, enum ovsdb_atomic_type key_type);
+const struct ovsdb_datum *ovsrec_port_get_rstp_statistics(const struct ovsrec_port *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
+const struct ovsdb_datum *ovsrec_port_get_rstp_status(const struct ovsrec_port *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_port_get_statistics(const struct ovsrec_port *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_port_get_status(const struct ovsrec_port *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_port_get_tag(const struct ovsrec_port *, enum ovsdb_atomic_type key_type);
@@ -1499,7 +1622,9 @@ void ovsrec_port_set_mac(const struct ovsrec_port *, const char *mac);
 void ovsrec_port_set_name(const struct ovsrec_port *, const char *name);
 void ovsrec_port_set_other_config(const struct ovsrec_port *, const struct smap *);
 void ovsrec_port_set_qos(const struct ovsrec_port *, const struct ovsrec_qos *qos);
-void ovsrec_port_set_statistics(const struct ovsrec_port *, char **key_statistics, const int64_t *value_statistics, size_t n_statistics);
+void ovsrec_port_set_rstp_statistics(const struct ovsrec_port *, const char **key_rstp_statistics, const int64_t *value_rstp_statistics, size_t n_rstp_statistics);
+void ovsrec_port_set_rstp_status(const struct ovsrec_port *, const struct smap *);
+void ovsrec_port_set_statistics(const struct ovsrec_port *, const char **key_statistics, const int64_t *value_statistics, size_t n_statistics);
 void ovsrec_port_set_status(const struct ovsrec_port *, const struct smap *);
 void ovsrec_port_set_tag(const struct ovsrec_port *, const int64_t *tag, size_t n_tag);
 void ovsrec_port_set_trunks(const struct ovsrec_port *, const int64_t *trunks, size_t n_trunks);
@@ -1561,9 +1686,6 @@ void ovsrec_qos_verify_other_config(const struct ovsrec_qos *);
 void ovsrec_qos_verify_queues(const struct ovsrec_qos *);
 void ovsrec_qos_verify_type(const struct ovsrec_qos *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_qos directly.) */
 const struct ovsdb_datum *ovsrec_qos_get_external_ids(const struct ovsrec_qos *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_qos_get_other_config(const struct ovsrec_qos *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_qos_get_queues(const struct ovsrec_qos *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
@@ -1623,9 +1745,6 @@ void ovsrec_queue_verify_dscp(const struct ovsrec_queue *);
 void ovsrec_queue_verify_external_ids(const struct ovsrec_queue *);
 void ovsrec_queue_verify_other_config(const struct ovsrec_queue *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_queue directly.) */
 const struct ovsdb_datum *ovsrec_queue_get_dscp(const struct ovsrec_queue *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_queue_get_external_ids(const struct ovsrec_queue *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_queue_get_other_config(const struct ovsrec_queue *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
@@ -1694,9 +1813,6 @@ void ovsrec_ssl_verify_certificate(const struct ovsrec_ssl *);
 void ovsrec_ssl_verify_external_ids(const struct ovsrec_ssl *);
 void ovsrec_ssl_verify_private_key(const struct ovsrec_ssl *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_ssl directly.) */
 const struct ovsdb_datum *ovsrec_ssl_get_bootstrap_ca_cert(const struct ovsrec_ssl *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_ssl_get_ca_cert(const struct ovsrec_ssl *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_ssl_get_certificate(const struct ovsrec_ssl *, enum ovsdb_atomic_type key_type);
@@ -1779,9 +1895,6 @@ void ovsrec_sflow_verify_polling(const struct ovsrec_sflow *);
 void ovsrec_sflow_verify_sampling(const struct ovsrec_sflow *);
 void ovsrec_sflow_verify_targets(const struct ovsrec_sflow *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of ovsrec_sflow directly.) */
 const struct ovsdb_datum *ovsrec_sflow_get_agent(const struct ovsrec_sflow *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *ovsrec_sflow_get_external_ids(const struct ovsrec_sflow *, enum ovsdb_atomic_type key_type, enum ovsdb_atomic_type value_type);
 const struct ovsdb_datum *ovsrec_sflow_get_header(const struct ovsrec_sflow *, enum ovsdb_atomic_type key_type);
@@ -1794,10 +1907,11 @@ void ovsrec_sflow_set_external_ids(const struct ovsrec_sflow *, const struct sma
 void ovsrec_sflow_set_header(const struct ovsrec_sflow *, const int64_t *header, size_t n_header);
 void ovsrec_sflow_set_polling(const struct ovsrec_sflow *, const int64_t *polling, size_t n_polling);
 void ovsrec_sflow_set_sampling(const struct ovsrec_sflow *, const int64_t *sampling, size_t n_sampling);
-void ovsrec_sflow_set_targets(const struct ovsrec_sflow *, char **targets, size_t n_targets);
+void ovsrec_sflow_set_targets(const struct ovsrec_sflow *, const char **targets, size_t n_targets);
 
 
 enum {
+    OVSREC_TABLE_AUTOATTACH,
     OVSREC_TABLE_BRIDGE,
     OVSREC_TABLE_CONTROLLER,
     OVSREC_TABLE_FLOW_SAMPLE_COLLECTOR_SET,
@@ -1822,6 +1936,7 @@ enum {
 #define ovsrec_table_flow_sample_collector_set (ovsrec_table_classes[OVSREC_TABLE_FLOW_SAMPLE_COLLECTOR_SET])
 #define ovsrec_table_ipfix (ovsrec_table_classes[OVSREC_TABLE_IPFIX])
 #define ovsrec_table_open_vswitch (ovsrec_table_classes[OVSREC_TABLE_OPEN_VSWITCH])
+#define ovsrec_table_autoattach (ovsrec_table_classes[OVSREC_TABLE_AUTOATTACH])
 #define ovsrec_table_controller (ovsrec_table_classes[OVSREC_TABLE_CONTROLLER])
 #define ovsrec_table_flow_table (ovsrec_table_classes[OVSREC_TABLE_FLOW_TABLE])
 #define ovsrec_table_queue (ovsrec_table_classes[OVSREC_TABLE_QUEUE])

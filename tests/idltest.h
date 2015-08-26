@@ -65,9 +65,6 @@ void idltest_link1_verify_k(const struct idltest_link1 *);
 void idltest_link1_verify_ka(const struct idltest_link1 *);
 void idltest_link1_verify_l2(const struct idltest_link1 *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of idltest_link1 directly.) */
 const struct ovsdb_datum *idltest_link1_get_i(const struct idltest_link1 *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *idltest_link1_get_k(const struct idltest_link1 *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *idltest_link1_get_ka(const struct idltest_link1 *, enum ovsdb_atomic_type key_type);
@@ -120,9 +117,6 @@ struct idltest_link2 *idltest_link2_insert(struct ovsdb_idl_txn *);
 void idltest_link2_verify_i(const struct idltest_link2 *);
 void idltest_link2_verify_l1(const struct idltest_link2 *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of idltest_link2 directly.) */
 const struct ovsdb_datum *idltest_link2_get_i(const struct idltest_link2 *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *idltest_link2_get_l1(const struct idltest_link2 *, enum ovsdb_atomic_type key_type);
 
@@ -224,9 +218,6 @@ void idltest_simple_verify_sa(const struct idltest_simple *);
 void idltest_simple_verify_u(const struct idltest_simple *);
 void idltest_simple_verify_ua(const struct idltest_simple *);
 
-/* Functions for fetching columns as "struct ovsdb_datum"s.  (This is
-   rarely useful.  More often, it is easier to access columns by using
-   the members of idltest_simple directly.) */
 const struct ovsdb_datum *idltest_simple_get_b(const struct idltest_simple *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *idltest_simple_get_ba(const struct idltest_simple *, enum ovsdb_atomic_type key_type);
 const struct ovsdb_datum *idltest_simple_get_i(const struct idltest_simple *, enum ovsdb_atomic_type key_type);
@@ -245,7 +236,7 @@ void idltest_simple_set_ia(const struct idltest_simple *, const int64_t *ia, siz
 void idltest_simple_set_r(const struct idltest_simple *, double r);
 void idltest_simple_set_ra(const struct idltest_simple *, const double *ra, size_t n_ra);
 void idltest_simple_set_s(const struct idltest_simple *, const char *s);
-void idltest_simple_set_sa(const struct idltest_simple *, char **sa, size_t n_sa);
+void idltest_simple_set_sa(const struct idltest_simple *, const char **sa, size_t n_sa);
 void idltest_simple_set_u(const struct idltest_simple *, struct uuid u);
 void idltest_simple_set_ua(const struct idltest_simple *, const struct uuid *ua, size_t n_ua);
 

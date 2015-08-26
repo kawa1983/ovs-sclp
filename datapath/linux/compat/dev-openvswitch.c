@@ -40,8 +40,8 @@ static int nr_bridges;
 
 #ifdef HAVE_RHEL_OVS_HOOK
 int rpl_netdev_rx_handler_register(struct net_device *dev,
-			       openvswitch_handle_frame_hook_t *hook,
-			       void *rx_handler_data)
+				   openvswitch_handle_frame_hook_t *hook,
+				   void *rx_handler_data)
 {
 	nr_bridges++;
 	rcu_assign_pointer(dev->ax25_ptr, rx_handler_data);
@@ -53,9 +53,9 @@ int rpl_netdev_rx_handler_register(struct net_device *dev,
 #elif defined HAVE_RHEL_BR_HOOK
 
 int rpl_netdev_rx_handler_register(struct net_device *dev,
-			       struct sk_buff *(*hook)(struct net_bridge_port *p,
-						       struct sk_buff *skb),
-			       void *rx_handler_data)
+				   struct sk_buff *(*hook)(struct net_bridge_port *p,
+							   struct sk_buff *skb),
+				   void *rx_handler_data)
 {
 	nr_bridges++;
 	if (dev->br_port)
@@ -73,6 +73,7 @@ int rpl_netdev_rx_handler_register(struct net_device *dev,
 			       rx_handler_func_t *rx_handler,
 			       void *rx_handler_data)
 {
+	nr_bridges++;
 	if (netdev_extended(dev)->rx_handler)
 		return -EBUSY;
 
@@ -81,8 +82,8 @@ int rpl_netdev_rx_handler_register(struct net_device *dev,
 
 	return 0;
 }
-#endif
 EXPORT_SYMBOL_GPL(rpl_netdev_rx_handler_register);
+#endif
 
 void rpl_netdev_rx_handler_unregister(struct net_device *dev)
 {
@@ -101,6 +102,7 @@ void rpl_netdev_rx_handler_unregister(struct net_device *dev)
 		return;
 
 	br_handle_frame_hook = NULL;
+
 #else
 	rcu_assign_pointer(netdev_extended(dev)->rx_handler, NULL);
 
@@ -110,4 +112,5 @@ void rpl_netdev_rx_handler_unregister(struct net_device *dev)
 #endif
 }
 EXPORT_SYMBOL_GPL(rpl_netdev_rx_handler_unregister);
+
 #endif

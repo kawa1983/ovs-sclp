@@ -26,6 +26,7 @@
 #include <linux/rtnetlink.h>
 #include <linux/skbuff.h>
 #include <linux/openvswitch.h>
+#include <linux/netdevice.h>
 
 #include <net/llc.h>
 
@@ -34,6 +35,7 @@
 #include "vport-internal_dev.h"
 #include "vport-netdev.h"
 
+static struct vport_ops ovs_netdev_vport_ops;
 static void netdev_port_receive(struct vport *vport, struct sk_buff *skb);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,39) || \
@@ -87,7 +89,7 @@ static struct sk_buff *netdev_frame_hook(struct net_bridge_port *p,
 #error
 #endif
 
-static struct net_device *get_dpdev(struct datapath *dp)
+static struct net_device *get_dpdev(const struct datapath *dp)
 {
 	struct vport *local;
 
@@ -135,6 +137,7 @@ static struct vport *netdev_create(const struct vport_parms *parms)
 	if (err)
 		goto error_master_upper_dev_unlink;
 
+	dev_disable_lro(netdev_vport->dev);
 	dev_set_promiscuity(netdev_vport->dev, 1);
 	netdev_vport->dev->priv_flags |= IFF_OVS_DATAPATH;
 	rtnl_unlock();
@@ -204,7 +207,8 @@ static void netdev_port_receive(struct vport *vport, struct sk_buff *skb)
 	/* Make our own copy of the packet.  Otherwise we will mangle the
 	 * packet for anyone who came before us (e.g. tcpdump via AF_PACKET).
 	 * (No one comes after us, since we tell handle_bridge() that we took
-	 * the packet.) */
+	 * the packet.)
+	 */
 	skb = skb_share_check(skb, GFP_ATOMIC);
 	if (unlikely(!skb))
 		return;
@@ -258,9 +262,9 @@ struct vport *ovs_netdev_get_vport(struct net_device *dev)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36) || \
     defined HAVE_RHEL_OVS_HOOK || \
-    (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32) && \
+    (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32) &&	\
      !defined HAVE_RHEL_BR_HOOK)
-#if IFF_OVS_DATAPATH != 0
+#ifdef HAVE_OVS_DATAPATH
 	if (likely(dev->priv_flags & IFF_OVS_DATAPATH))
 #else
 	if (likely(rcu_access_pointer(dev->rx_handler) == netdev_frame_hook))
@@ -279,13 +283,23 @@ struct vport *ovs_netdev_get_vport(struct net_device *dev)
 #endif
 }
 
-const struct vport_ops ovs_netdev_vport_ops = {
+static struct vport_ops ovs_netdev_vport_ops = {
 	.type		= OVS_VPORT_TYPE_NETDEV,
 	.create		= netdev_create,
 	.destroy	= netdev_destroy,
 	.get_name	= ovs_netdev_get_name,
 	.send		= netdev_send,
 };
+
+int __init ovs_netdev_init(void)
+{
+	return ovs_vport_ops_register(&ovs_netdev_vport_ops);
+}
+
+void ovs_netdev_exit(void)
+{
+	ovs_vport_ops_unregister(&ovs_netdev_vport_ops);
+}
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36) && \
     !defined HAVE_RHEL_OVS_HOOK && defined HAVE_RHEL_BR_HOOK

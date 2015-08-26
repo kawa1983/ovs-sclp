@@ -1,6 +1,6 @@
 /* Generated automatically; do not modify!     -*- buffer-read-only: t -*- */
 
-#define OFPERR_N_ERRORS 148
+#define OFPERR_N_ERRORS 158
 
 struct ofperr_domain {
     const char *name;
@@ -30,9 +30,6 @@ static const char *error_names[OFPERR_N_ERRORS] = {
     "NXBRC_NXM_BAD_TYPE",
     "NXBRC_MUST_BE_ZERO",
     "NXBRC_BAD_REASON",
-    "NXBRC_FM_DUPLICATE_ID",
-    "NXBRC_FM_BAD_FLAGS",
-    "NXBRC_FM_BAD_ID",
     "NXBRC_FM_BAD_EVENT",
     "NXBRC_UNENCODABLE_ERROR",
     "OFPBAC_BAD_TYPE",
@@ -51,7 +48,9 @@ static const char *error_names[OFPERR_N_ERRORS] = {
     "OFPBAC_BAD_SET_TYPE",
     "OFPBAC_BAD_SET_LEN",
     "OFPBAC_BAD_SET_ARGUMENT",
+    "OFPBAC_BAD_SET_MASK",
     "NXBAC_MUST_BE_ZERO",
+    "NXBAC_BAD_CONJUNCTION",
     "OFPBIC_UNKNOWN_INST",
     "OFPBIC_UNSUP_INST",
     "OFPBIC_BAD_TABLE_ID",
@@ -61,7 +60,7 @@ static const char *error_names[OFPERR_N_ERRORS] = {
     "OFPBIC_BAD_EXP_TYPE",
     "OFPBIC_BAD_LEN",
     "OFPBIC_EPERM",
-    "ONFBIC_DUP_INSTRUCTION",
+    "OFPBIC_DUP_INST",
     "OFPBMC_BAD_TYPE",
     "OFPBMC_BAD_LEN",
     "OFPBMC_BAD_TAG",
@@ -101,6 +100,8 @@ static const char *error_names[OFPERR_N_ERRORS] = {
     "OFPGMFC_BAD_BUCKET",
     "OFPGMFC_BAD_WATCH",
     "OFPGMFC_EPERM",
+    "OFPGMFC_UNKNOWN_BUCKET",
+    "OFPGMFC_BUCKET_EXISTS",
     "OFPPMFC_BAD_PORT",
     "OFPPMFC_BAD_HW_ADDR",
     "OFPPMFC_BAD_CONFIG",
@@ -158,6 +159,15 @@ static const char *error_names[OFPERR_N_ERRORS] = {
     "OFPBFC_MSG_FAILED",
     "OFPBFC_TIMEOUT",
     "OFPBFC_BUNDLE_IN_PROGRESS",
+    "NXBFC_BAD_VERSION",
+    "OFPMOFC_UNKNOWN",
+    "OFPMOFC_MONITOR_EXISTS",
+    "OFPMOFC_INVALID_MONITOR",
+    "OFPMOFC_UNKNOWN_MONITOR",
+    "OFPMOFC_BAD_COMMAND",
+    "OFPMOFC_BAD_FLAGS",
+    "OFPMOFC_BAD_TABLE_ID",
+    "OFPMOFC_BAD_OUT",
 };
 
 static const char *error_comments[OFPERR_N_ERRORS] = {
@@ -181,9 +191,6 @@ static const char *error_comments[OFPERR_N_ERRORS] = {
     "The nxm_type, or nxm_type taken in combination with nxm_hasmask or nxm_length or both, is invalid or not implemented.",
     "Must-be-zero field had nonzero value.",
     "The reason in an ofp_port_status message is not valid.",
-    "The 'id' in an NXST_FLOW_MONITOR request is the same as an existing monitor id (or two monitors in the same NXST_FLOW_MONITOR request have the same 'id').",
-    "The 'flags' in an NXST_FLOW_MONITOR request either does not specify at least one of the NXFMF_ADD, NXFMF_DELETE, or NXFMF_MODIFY flags, or specifies a flag bit that is not defined.",
-    "The 'id' in an NXT_FLOW_MONITOR_CANCEL request is not the id of any existing monitor.",
     "The 'event' in an NXST_FLOW_MONITOR reply does not specify one of the NXFME_ABBREV, NXFME_ADD, NXFME_DELETE, or NXFME_MODIFY.",
     "The error that occurred cannot be represented in this OpenFlow version.",
     "Unknown action type.",
@@ -202,7 +209,9 @@ static const char *error_comments[OFPERR_N_ERRORS] = {
     "Action uses unknown or unsupported OXM or NXM field.",
     "Action references past the end of an OXM or NXM field, or uses a length of zero.",
     "Action sets a field to an invalid or unsupported value, or modifies a read-only field.",
+    "Field in Set-Field action has Has-Mask bit set to 1.",
     "Must-be-zero action argument had nonzero value.",
+    "Conjunction action must be only action present.  conjunction(id, k/n) must satisfy 1 <= k <= n and 2 <= n <= 64.",
     "Unknown instruction.",
     "Switch or table does not support the instruction.",
     "Invalid Table-ID specified.",
@@ -252,6 +261,8 @@ static const char *error_comments[OFPERR_N_ERRORS] = {
     "Error in bucket.",
     "Error in watch port/group.",
     "Permissions error.",
+    "Invalid bucket identifier used in INSERT BUCKET or REMOVE BUCKET command.",
+    "Can't insert bucket because a bucket already exist with that bucket-id.",
     "Specified port does not exist.",
     "Specified hardware address does not match the port number.",
     "Specified config is invalid.",
@@ -309,6 +320,15 @@ static const char *error_comments[OFPERR_N_ERRORS] = {
     "One message in bundle failed.",
     "Bundle is taking too long.",
     "Bundle is locking the resource.",
+    "In an OFPT_BUNDLE_ADD_MESSAGE, the OpenFlow version in the inner and outer messages differ.",
+    "Unspecified error.",
+    "Monitor not added because a Monitor ADD attempted to replace an existing Monitor.",
+    "Monitor not added because Monitor specified is invalid.",
+    "Monitor not modified because a Monitor MODIFY attempted to modify a non-existent Monitor.",
+    "Unsupported or unknown command.",
+    "Flag configuration unsupported.",
+    "Specified table does not exist.",
+    "Error in output port/group.",
 };
 
 static enum ofperr
@@ -355,12 +375,6 @@ ofperr_of14_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_NXBRC_MUST_BE_ZERO;
     case (0x2320ULL << 32) | (5 << 16) | 0:
         return OFPERR_NXBRC_BAD_REASON;
-    case (0x2320ULL << 32) | (6 << 16) | 0:
-        return OFPERR_NXBRC_FM_DUPLICATE_ID;
-    case (0x2320ULL << 32) | (7 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_FLAGS;
-    case (0x2320ULL << 32) | (8 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_ID;
     case (0x2320ULL << 32) | (9 << 16) | 0:
         return OFPERR_NXBRC_FM_BAD_EVENT;
     case (0x2320ULL << 32) | (10 << 16) | 0:
@@ -397,8 +411,12 @@ ofperr_of14_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBAC_BAD_SET_LEN;
     case (2 << 16) | 15:
         return OFPERR_OFPBAC_BAD_SET_ARGUMENT;
+    case (0x4f4e4600ULL << 32) | (4250 << 16) | 0:
+        return OFPERR_OFPBAC_BAD_SET_MASK;
     case (0x2320ULL << 32) | (11 << 16) | 0:
         return OFPERR_NXBAC_MUST_BE_ZERO;
+    case (0x2320ULL << 32) | (15 << 16) | 0:
+        return OFPERR_NXBAC_BAD_CONJUNCTION;
     case (3 << 16) | 0:
         return OFPERR_OFPBIC_UNKNOWN_INST;
     case (3 << 16) | 1:
@@ -417,6 +435,8 @@ ofperr_of14_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBIC_BAD_LEN;
     case (3 << 16) | 8:
         return OFPERR_OFPBIC_EPERM;
+    case (3 << 16) | 9:
+        return OFPERR_OFPBIC_DUP_INST;
     case (4 << 16) | 0:
         return OFPERR_OFPBMC_BAD_TYPE;
     case (4 << 16) | 1:
@@ -605,6 +625,24 @@ ofperr_of14_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBFC_TIMEOUT;
     case (17 << 16) | 15:
         return OFPERR_OFPBFC_BUNDLE_IN_PROGRESS;
+    case (0x2320ULL << 32) | (22 << 16) | 0:
+        return OFPERR_NXBFC_BAD_VERSION;
+    case (16 << 16) | 0:
+        return OFPERR_OFPMOFC_UNKNOWN;
+    case (16 << 16) | 1:
+        return OFPERR_OFPMOFC_MONITOR_EXISTS;
+    case (16 << 16) | 2:
+        return OFPERR_OFPMOFC_INVALID_MONITOR;
+    case (16 << 16) | 3:
+        return OFPERR_OFPMOFC_UNKNOWN_MONITOR;
+    case (16 << 16) | 4:
+        return OFPERR_OFPMOFC_BAD_COMMAND;
+    case (16 << 16) | 5:
+        return OFPERR_OFPMOFC_BAD_FLAGS;
+    case (16 << 16) | 6:
+        return OFPERR_OFPMOFC_BAD_TABLE_ID;
+    case (16 << 16) | 7:
+        return OFPERR_OFPMOFC_BAD_OUT;
     }
 
     return 0;
@@ -635,9 +673,6 @@ static const struct ofperr_domain ofperr_of14 = {
         {   0x2320,  3,   0 }, /* NXBRC_NXM_BAD_TYPE */
         {   0x2320,  4,   0 }, /* NXBRC_MUST_BE_ZERO */
         {   0x2320,  5,   0 }, /* NXBRC_BAD_REASON */
-        {   0x2320,  6,   0 }, /* NXBRC_FM_DUPLICATE_ID */
-        {   0x2320,  7,   0 }, /* NXBRC_FM_BAD_FLAGS */
-        {   0x2320,  8,   0 }, /* NXBRC_FM_BAD_ID */
         {   0x2320,  9,   0 }, /* NXBRC_FM_BAD_EVENT */
         {   0x2320, 10,   0 }, /* NXBRC_UNENCODABLE_ERROR */
         {      0x0,  2,   0 }, /* OFPBAC_BAD_TYPE */
@@ -656,7 +691,9 @@ static const struct ofperr_domain ofperr_of14 = {
         {      0x0,  2,  13 }, /* OFPBAC_BAD_SET_TYPE */
         {      0x0,  2,  14 }, /* OFPBAC_BAD_SET_LEN */
         {      0x0,  2,  15 }, /* OFPBAC_BAD_SET_ARGUMENT */
+        { 0x4f4e4600, 4250,   0 }, /* OFPBAC_BAD_SET_MASK */
         {   0x2320, 11,   0 }, /* NXBAC_MUST_BE_ZERO */
+        {   0x2320, 15,   0 }, /* NXBAC_BAD_CONJUNCTION */
         {      0x0,  3,   0 }, /* OFPBIC_UNKNOWN_INST */
         {      0x0,  3,   1 }, /* OFPBIC_UNSUP_INST */
         {      0x0,  3,   2 }, /* OFPBIC_BAD_TABLE_ID */
@@ -666,7 +703,7 @@ static const struct ofperr_domain ofperr_of14 = {
         {      0x0,  3,   6 }, /* OFPBIC_BAD_EXP_TYPE */
         {      0x0,  3,   7 }, /* OFPBIC_BAD_LEN */
         {      0x0,  3,   8 }, /* OFPBIC_EPERM */
-        { 0x4f4e4600, 2600,  -1 }, /* ONFBIC_DUP_INSTRUCTION */
+        {      0x0,  3,   9 }, /* OFPBIC_DUP_INST */
         {      0x0,  4,   0 }, /* OFPBMC_BAD_TYPE */
         {      0x0,  4,   1 }, /* OFPBMC_BAD_LEN */
         {      0x0,  4,   2 }, /* OFPBMC_BAD_TAG */
@@ -706,6 +743,8 @@ static const struct ofperr_domain ofperr_of14 = {
         {      0x0,  6,  12 }, /* OFPGMFC_BAD_BUCKET */
         {      0x0,  6,  13 }, /* OFPGMFC_BAD_WATCH */
         {      0x0,  6,  14 }, /* OFPGMFC_EPERM */
+        {       -1, -1,  -1 }, /* OFPGMFC_UNKNOWN_BUCKET */
+        {       -1, -1,  -1 }, /* OFPGMFC_BUCKET_EXISTS */
         {      0x0,  7,   0 }, /* OFPPMFC_BAD_PORT */
         {      0x0,  7,   1 }, /* OFPPMFC_BAD_HW_ADDR */
         {      0x0,  7,   2 }, /* OFPPMFC_BAD_CONFIG */
@@ -763,6 +802,15 @@ static const struct ofperr_domain ofperr_of14 = {
         {      0x0, 17,  13 }, /* OFPBFC_MSG_FAILED */
         {      0x0, 17,  14 }, /* OFPBFC_TIMEOUT */
         {      0x0, 17,  15 }, /* OFPBFC_BUNDLE_IN_PROGRESS */
+        {   0x2320, 22,   0 }, /* NXBFC_BAD_VERSION */
+        {      0x0, 16,   0 }, /* OFPMOFC_UNKNOWN */
+        {      0x0, 16,   1 }, /* OFPMOFC_MONITOR_EXISTS */
+        {      0x0, 16,   2 }, /* OFPMOFC_INVALID_MONITOR */
+        {      0x0, 16,   3 }, /* OFPMOFC_UNKNOWN_MONITOR */
+        {      0x0, 16,   4 }, /* OFPMOFC_BAD_COMMAND */
+        {      0x0, 16,   5 }, /* OFPMOFC_BAD_FLAGS */
+        {      0x0, 16,   6 }, /* OFPMOFC_BAD_TABLE_ID */
+        {      0x0, 16,   7 }, /* OFPMOFC_BAD_OUT */
     },
 };
 
@@ -810,12 +858,6 @@ ofperr_of15_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_NXBRC_MUST_BE_ZERO;
     case (0x2320ULL << 32) | (5 << 16) | 0:
         return OFPERR_NXBRC_BAD_REASON;
-    case (0x2320ULL << 32) | (6 << 16) | 0:
-        return OFPERR_NXBRC_FM_DUPLICATE_ID;
-    case (0x2320ULL << 32) | (7 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_FLAGS;
-    case (0x2320ULL << 32) | (8 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_ID;
     case (0x2320ULL << 32) | (9 << 16) | 0:
         return OFPERR_NXBRC_FM_BAD_EVENT;
     case (0x2320ULL << 32) | (10 << 16) | 0:
@@ -852,8 +894,12 @@ ofperr_of15_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBAC_BAD_SET_LEN;
     case (2 << 16) | 15:
         return OFPERR_OFPBAC_BAD_SET_ARGUMENT;
+    case (2 << 16) | 16:
+        return OFPERR_OFPBAC_BAD_SET_MASK;
     case (0x2320ULL << 32) | (11 << 16) | 0:
         return OFPERR_NXBAC_MUST_BE_ZERO;
+    case (0x2320ULL << 32) | (15 << 16) | 0:
+        return OFPERR_NXBAC_BAD_CONJUNCTION;
     case (3 << 16) | 0:
         return OFPERR_OFPBIC_UNKNOWN_INST;
     case (3 << 16) | 1:
@@ -872,6 +918,8 @@ ofperr_of15_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBIC_BAD_LEN;
     case (3 << 16) | 8:
         return OFPERR_OFPBIC_EPERM;
+    case (3 << 16) | 9:
+        return OFPERR_OFPBIC_DUP_INST;
     case (4 << 16) | 0:
         return OFPERR_OFPBMC_BAD_TYPE;
     case (4 << 16) | 1:
@@ -946,6 +994,10 @@ ofperr_of15_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPGMFC_BAD_WATCH;
     case (6 << 16) | 14:
         return OFPERR_OFPGMFC_EPERM;
+    case (6 << 16) | 15:
+        return OFPERR_OFPGMFC_UNKNOWN_BUCKET;
+    case (6 << 16) | 16:
+        return OFPERR_OFPGMFC_BUCKET_EXISTS;
     case (7 << 16) | 0:
         return OFPERR_OFPPMFC_BAD_PORT;
     case (7 << 16) | 1:
@@ -1060,6 +1112,24 @@ ofperr_of15_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBFC_TIMEOUT;
     case (17 << 16) | 15:
         return OFPERR_OFPBFC_BUNDLE_IN_PROGRESS;
+    case (0x2320ULL << 32) | (22 << 16) | 0:
+        return OFPERR_NXBFC_BAD_VERSION;
+    case (16 << 16) | 0:
+        return OFPERR_OFPMOFC_UNKNOWN;
+    case (16 << 16) | 1:
+        return OFPERR_OFPMOFC_MONITOR_EXISTS;
+    case (16 << 16) | 2:
+        return OFPERR_OFPMOFC_INVALID_MONITOR;
+    case (16 << 16) | 3:
+        return OFPERR_OFPMOFC_UNKNOWN_MONITOR;
+    case (16 << 16) | 4:
+        return OFPERR_OFPMOFC_BAD_COMMAND;
+    case (16 << 16) | 5:
+        return OFPERR_OFPMOFC_BAD_FLAGS;
+    case (16 << 16) | 6:
+        return OFPERR_OFPMOFC_BAD_TABLE_ID;
+    case (16 << 16) | 7:
+        return OFPERR_OFPMOFC_BAD_OUT;
     }
 
     return 0;
@@ -1090,9 +1160,6 @@ static const struct ofperr_domain ofperr_of15 = {
         {   0x2320,  3,   0 }, /* NXBRC_NXM_BAD_TYPE */
         {   0x2320,  4,   0 }, /* NXBRC_MUST_BE_ZERO */
         {   0x2320,  5,   0 }, /* NXBRC_BAD_REASON */
-        {   0x2320,  6,   0 }, /* NXBRC_FM_DUPLICATE_ID */
-        {   0x2320,  7,   0 }, /* NXBRC_FM_BAD_FLAGS */
-        {   0x2320,  8,   0 }, /* NXBRC_FM_BAD_ID */
         {   0x2320,  9,   0 }, /* NXBRC_FM_BAD_EVENT */
         {   0x2320, 10,   0 }, /* NXBRC_UNENCODABLE_ERROR */
         {      0x0,  2,   0 }, /* OFPBAC_BAD_TYPE */
@@ -1111,7 +1178,9 @@ static const struct ofperr_domain ofperr_of15 = {
         {      0x0,  2,  13 }, /* OFPBAC_BAD_SET_TYPE */
         {      0x0,  2,  14 }, /* OFPBAC_BAD_SET_LEN */
         {      0x0,  2,  15 }, /* OFPBAC_BAD_SET_ARGUMENT */
+        {      0x0,  2,  16 }, /* OFPBAC_BAD_SET_MASK */
         {   0x2320, 11,   0 }, /* NXBAC_MUST_BE_ZERO */
+        {   0x2320, 15,   0 }, /* NXBAC_BAD_CONJUNCTION */
         {      0x0,  3,   0 }, /* OFPBIC_UNKNOWN_INST */
         {      0x0,  3,   1 }, /* OFPBIC_UNSUP_INST */
         {      0x0,  3,   2 }, /* OFPBIC_BAD_TABLE_ID */
@@ -1121,7 +1190,7 @@ static const struct ofperr_domain ofperr_of15 = {
         {      0x0,  3,   6 }, /* OFPBIC_BAD_EXP_TYPE */
         {      0x0,  3,   7 }, /* OFPBIC_BAD_LEN */
         {      0x0,  3,   8 }, /* OFPBIC_EPERM */
-        { 0x4f4e4600, 2600,  -1 }, /* ONFBIC_DUP_INSTRUCTION */
+        {      0x0,  3,   9 }, /* OFPBIC_DUP_INST */
         {      0x0,  4,   0 }, /* OFPBMC_BAD_TYPE */
         {      0x0,  4,   1 }, /* OFPBMC_BAD_LEN */
         {      0x0,  4,   2 }, /* OFPBMC_BAD_TAG */
@@ -1161,6 +1230,8 @@ static const struct ofperr_domain ofperr_of15 = {
         {      0x0,  6,  12 }, /* OFPGMFC_BAD_BUCKET */
         {      0x0,  6,  13 }, /* OFPGMFC_BAD_WATCH */
         {      0x0,  6,  14 }, /* OFPGMFC_EPERM */
+        {      0x0,  6,  15 }, /* OFPGMFC_UNKNOWN_BUCKET */
+        {      0x0,  6,  16 }, /* OFPGMFC_BUCKET_EXISTS */
         {      0x0,  7,   0 }, /* OFPPMFC_BAD_PORT */
         {      0x0,  7,   1 }, /* OFPPMFC_BAD_HW_ADDR */
         {      0x0,  7,   2 }, /* OFPPMFC_BAD_CONFIG */
@@ -1218,6 +1289,15 @@ static const struct ofperr_domain ofperr_of15 = {
         {      0x0, 17,  13 }, /* OFPBFC_MSG_FAILED */
         {      0x0, 17,  14 }, /* OFPBFC_TIMEOUT */
         {      0x0, 17,  15 }, /* OFPBFC_BUNDLE_IN_PROGRESS */
+        {   0x2320, 22,   0 }, /* NXBFC_BAD_VERSION */
+        {      0x0, 16,   0 }, /* OFPMOFC_UNKNOWN */
+        {      0x0, 16,   1 }, /* OFPMOFC_MONITOR_EXISTS */
+        {      0x0, 16,   2 }, /* OFPMOFC_INVALID_MONITOR */
+        {      0x0, 16,   3 }, /* OFPMOFC_UNKNOWN_MONITOR */
+        {      0x0, 16,   4 }, /* OFPMOFC_BAD_COMMAND */
+        {      0x0, 16,   5 }, /* OFPMOFC_BAD_FLAGS */
+        {      0x0, 16,   6 }, /* OFPMOFC_BAD_TABLE_ID */
+        {      0x0, 16,   7 }, /* OFPMOFC_BAD_OUT */
     },
 };
 
@@ -1259,12 +1339,6 @@ ofperr_of10_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_NXBRC_MUST_BE_ZERO;
     case (0x2320ULL << 32) | (1 << 16) | 516:
         return OFPERR_NXBRC_BAD_REASON;
-    case (0x2320ULL << 32) | (1 << 16) | 517:
-        return OFPERR_NXBRC_FM_DUPLICATE_ID;
-    case (0x2320ULL << 32) | (1 << 16) | 518:
-        return OFPERR_NXBRC_FM_BAD_FLAGS;
-    case (0x2320ULL << 32) | (1 << 16) | 519:
-        return OFPERR_NXBRC_FM_BAD_ID;
     case (0x2320ULL << 32) | (1 << 16) | 520:
         return OFPERR_NXBRC_FM_BAD_EVENT;
     case (0x2320ULL << 32) | (1 << 16) | 521:
@@ -1297,6 +1371,12 @@ ofperr_of10_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBAC_BAD_SET_ARGUMENT;
     case (0x2320ULL << 32) | (2 << 16) | 256:
         return OFPERR_NXBAC_MUST_BE_ZERO;
+    case (0x2320ULL << 32) | (2 << 16) | 526:
+        return OFPERR_NXBAC_BAD_CONJUNCTION;
+    case (0x2320ULL << 32) | (2 << 16) | 257:
+        return OFPERR_OFPBIC_UNSUP_INST;
+    case (0x2320ULL << 32) | (1 << 16) | 262:
+        return OFPERR_OFPBMC_BAD_WILDCARDS;
     case (0x2320ULL << 32) | (0 << 16) | 263:
         return OFPERR_OFPBMC_BAD_FIELD;
     case (0x2320ULL << 32) | (1 << 16) | 258:
@@ -1337,6 +1417,12 @@ ofperr_of10_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPQOFC_EPERM;
     case (0x2320ULL << 32) | (1 << 16) | 513:
         return OFPERR_OFPRRFC_BAD_ROLE;
+    case (0x2320ULL << 32) | (1 << 16) | 517:
+        return OFPERR_OFPMOFC_MONITOR_EXISTS;
+    case (0x2320ULL << 32) | (1 << 16) | 519:
+        return OFPERR_OFPMOFC_UNKNOWN_MONITOR;
+    case (0x2320ULL << 32) | (1 << 16) | 518:
+        return OFPERR_OFPMOFC_BAD_FLAGS;
     }
 
     return 0;
@@ -1359,7 +1445,7 @@ static const struct ofperr_domain ofperr_of10 = {
         {      0x0,  1,   7 }, /* OFPBRC_BUFFER_EMPTY */
         {      0x0,  1,   8 }, /* OFPBRC_BUFFER_UNKNOWN */
         {   0x2320,  1, 512 }, /* OFPBRC_BAD_TABLE_ID */
-        {       -1, -1,  -1 }, /* OFPBRC_IS_SLAVE */
+        {      0x0,  1,   5 }, /* OFPBRC_IS_SLAVE */
         {   0x2320,  1, 514 }, /* OFPBRC_BAD_PORT */
         {       -1, -1,  -1 }, /* OFPBRC_BAD_PACKET */
         {       -1, -1,  -1 }, /* OFPBRC_MULTIPART_BUFFER_OVERFLOW */
@@ -1367,9 +1453,6 @@ static const struct ofperr_domain ofperr_of10 = {
         {   0x2320,  1, 257 }, /* NXBRC_NXM_BAD_TYPE */
         {   0x2320,  1, 515 }, /* NXBRC_MUST_BE_ZERO */
         {   0x2320,  1, 516 }, /* NXBRC_BAD_REASON */
-        {   0x2320,  1, 517 }, /* NXBRC_FM_DUPLICATE_ID */
-        {   0x2320,  1, 518 }, /* NXBRC_FM_BAD_FLAGS */
-        {   0x2320,  1, 519 }, /* NXBRC_FM_BAD_ID */
         {   0x2320,  1, 520 }, /* NXBRC_FM_BAD_EVENT */
         {   0x2320,  1, 521 }, /* NXBRC_UNENCODABLE_ERROR */
         {      0x0,  2,   0 }, /* OFPBAC_BAD_TYPE */
@@ -1388,9 +1471,11 @@ static const struct ofperr_domain ofperr_of10 = {
         {   0x2320,  1, 523 }, /* OFPBAC_BAD_SET_TYPE */
         {   0x2320,  1, 524 }, /* OFPBAC_BAD_SET_LEN */
         {   0x2320,  1, 525 }, /* OFPBAC_BAD_SET_ARGUMENT */
+        {       -1, -1,  -1 }, /* OFPBAC_BAD_SET_MASK */
         {   0x2320,  2, 256 }, /* NXBAC_MUST_BE_ZERO */
+        {   0x2320,  2, 526 }, /* NXBAC_BAD_CONJUNCTION */
         {       -1, -1,  -1 }, /* OFPBIC_UNKNOWN_INST */
-        {       -1, -1,  -1 }, /* OFPBIC_UNSUP_INST */
+        {   0x2320,  2, 257 }, /* OFPBIC_UNSUP_INST */
         {       -1, -1,  -1 }, /* OFPBIC_BAD_TABLE_ID */
         {       -1, -1,  -1 }, /* OFPBIC_UNSUP_METADATA */
         {       -1, -1,  -1 }, /* OFPBIC_UNSUP_METADATA_MASK */
@@ -1398,13 +1483,13 @@ static const struct ofperr_domain ofperr_of10 = {
         {       -1, -1,  -1 }, /* OFPBIC_BAD_EXP_TYPE */
         {       -1, -1,  -1 }, /* OFPBIC_BAD_LEN */
         {       -1, -1,  -1 }, /* OFPBIC_EPERM */
-        {       -1, -1,  -1 }, /* ONFBIC_DUP_INSTRUCTION */
+        {       -1, -1,  -1 }, /* OFPBIC_DUP_INST */
         {       -1, -1,  -1 }, /* OFPBMC_BAD_TYPE */
         {       -1, -1,  -1 }, /* OFPBMC_BAD_LEN */
         {       -1, -1,  -1 }, /* OFPBMC_BAD_TAG */
         {       -1, -1,  -1 }, /* OFPBMC_BAD_DL_ADDR_MASK */
         {       -1, -1,  -1 }, /* OFPBMC_BAD_NW_ADDR_MASK */
-        {       -1, -1,  -1 }, /* OFPBMC_BAD_WILDCARDS */
+        {   0x2320,  1, 262 }, /* OFPBMC_BAD_WILDCARDS */
         {   0x2320,  0, 263 }, /* OFPBMC_BAD_FIELD */
         {   0x2320,  1, 258 }, /* OFPBMC_BAD_VALUE */
         {   0x2320,  1, 259 }, /* OFPBMC_BAD_MASK */
@@ -1438,6 +1523,8 @@ static const struct ofperr_domain ofperr_of10 = {
         {       -1, -1,  -1 }, /* OFPGMFC_BAD_BUCKET */
         {       -1, -1,  -1 }, /* OFPGMFC_BAD_WATCH */
         {       -1, -1,  -1 }, /* OFPGMFC_EPERM */
+        {       -1, -1,  -1 }, /* OFPGMFC_UNKNOWN_BUCKET */
+        {       -1, -1,  -1 }, /* OFPGMFC_BUCKET_EXISTS */
         {      0x0,  4,   0 }, /* OFPPMFC_BAD_PORT */
         {      0x0,  4,   1 }, /* OFPPMFC_BAD_HW_ADDR */
         {       -1, -1,  -1 }, /* OFPPMFC_BAD_CONFIG */
@@ -1495,6 +1582,15 @@ static const struct ofperr_domain ofperr_of10 = {
         {       -1, -1,  -1 }, /* OFPBFC_MSG_FAILED */
         {       -1, -1,  -1 }, /* OFPBFC_TIMEOUT */
         {       -1, -1,  -1 }, /* OFPBFC_BUNDLE_IN_PROGRESS */
+        {       -1, -1,  -1 }, /* NXBFC_BAD_VERSION */
+        {       -1, -1,  -1 }, /* OFPMOFC_UNKNOWN */
+        {   0x2320,  1, 517 }, /* OFPMOFC_MONITOR_EXISTS */
+        {       -1, -1,  -1 }, /* OFPMOFC_INVALID_MONITOR */
+        {   0x2320,  1, 519 }, /* OFPMOFC_UNKNOWN_MONITOR */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_COMMAND */
+        {   0x2320,  1, 518 }, /* OFPMOFC_BAD_FLAGS */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_TABLE_ID */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_OUT */
     },
 };
 
@@ -1536,12 +1632,6 @@ ofperr_of11_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_NXBRC_MUST_BE_ZERO;
     case (0x2320ULL << 32) | (1 << 16) | 516:
         return OFPERR_NXBRC_BAD_REASON;
-    case (0x2320ULL << 32) | (1 << 16) | 517:
-        return OFPERR_NXBRC_FM_DUPLICATE_ID;
-    case (0x2320ULL << 32) | (1 << 16) | 518:
-        return OFPERR_NXBRC_FM_BAD_FLAGS;
-    case (0x2320ULL << 32) | (1 << 16) | 519:
-        return OFPERR_NXBRC_FM_BAD_ID;
     case (0x2320ULL << 32) | (1 << 16) | 520:
         return OFPERR_NXBRC_FM_BAD_EVENT;
     case (0x2320ULL << 32) | (1 << 16) | 521:
@@ -1580,6 +1670,8 @@ ofperr_of11_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBAC_BAD_SET_ARGUMENT;
     case (0x2320ULL << 32) | (2 << 16) | 256:
         return OFPERR_NXBAC_MUST_BE_ZERO;
+    case (0x2320ULL << 32) | (2 << 16) | 526:
+        return OFPERR_NXBAC_BAD_CONJUNCTION;
     case (3 << 16) | 0:
         return OFPERR_OFPBIC_UNKNOWN_INST;
     case (3 << 16) | 1:
@@ -1592,6 +1684,8 @@ ofperr_of11_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBIC_UNSUP_METADATA_MASK;
     case (3 << 16) | 5:
         return OFPERR_OFPBIC_BAD_EXPERIMENTER;
+    case (0x2320ULL << 32) | (3 << 16) | 256:
+        return OFPERR_OFPBIC_DUP_INST;
     case (4 << 16) | 0:
         return OFPERR_OFPBMC_BAD_TYPE;
     case (4 << 16) | 1:
@@ -1676,6 +1770,12 @@ ofperr_of11_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPSCFC_BAD_LEN;
     case (0x2320ULL << 32) | (1 << 16) | 513:
         return OFPERR_OFPRRFC_BAD_ROLE;
+    case (0x2320ULL << 32) | (1 << 16) | 517:
+        return OFPERR_OFPMOFC_MONITOR_EXISTS;
+    case (0x2320ULL << 32) | (1 << 16) | 519:
+        return OFPERR_OFPMOFC_UNKNOWN_MONITOR;
+    case (0x2320ULL << 32) | (1 << 16) | 518:
+        return OFPERR_OFPMOFC_BAD_FLAGS;
     }
 
     return 0;
@@ -1698,7 +1798,7 @@ static const struct ofperr_domain ofperr_of11 = {
         {      0x0,  1,   7 }, /* OFPBRC_BUFFER_EMPTY */
         {      0x0,  1,   8 }, /* OFPBRC_BUFFER_UNKNOWN */
         {      0x0,  1,   9 }, /* OFPBRC_BAD_TABLE_ID */
-        {       -1, -1,  -1 }, /* OFPBRC_IS_SLAVE */
+        {      0x0,  1,   5 }, /* OFPBRC_IS_SLAVE */
         {   0x2320,  1, 514 }, /* OFPBRC_BAD_PORT */
         {       -1, -1,  -1 }, /* OFPBRC_BAD_PACKET */
         {       -1, -1,  -1 }, /* OFPBRC_MULTIPART_BUFFER_OVERFLOW */
@@ -1706,9 +1806,6 @@ static const struct ofperr_domain ofperr_of11 = {
         {   0x2320,  1, 257 }, /* NXBRC_NXM_BAD_TYPE */
         {   0x2320,  1, 515 }, /* NXBRC_MUST_BE_ZERO */
         {   0x2320,  1, 516 }, /* NXBRC_BAD_REASON */
-        {   0x2320,  1, 517 }, /* NXBRC_FM_DUPLICATE_ID */
-        {   0x2320,  1, 518 }, /* NXBRC_FM_BAD_FLAGS */
-        {   0x2320,  1, 519 }, /* NXBRC_FM_BAD_ID */
         {   0x2320,  1, 520 }, /* NXBRC_FM_BAD_EVENT */
         {   0x2320,  1, 521 }, /* NXBRC_UNENCODABLE_ERROR */
         {      0x0,  2,   0 }, /* OFPBAC_BAD_TYPE */
@@ -1727,7 +1824,9 @@ static const struct ofperr_domain ofperr_of11 = {
         {   0x2320,  1, 523 }, /* OFPBAC_BAD_SET_TYPE */
         {   0x2320,  1, 524 }, /* OFPBAC_BAD_SET_LEN */
         {   0x2320,  1, 525 }, /* OFPBAC_BAD_SET_ARGUMENT */
+        {       -1, -1,  -1 }, /* OFPBAC_BAD_SET_MASK */
         {   0x2320,  2, 256 }, /* NXBAC_MUST_BE_ZERO */
+        {   0x2320,  2, 526 }, /* NXBAC_BAD_CONJUNCTION */
         {      0x0,  3,   0 }, /* OFPBIC_UNKNOWN_INST */
         {      0x0,  3,   1 }, /* OFPBIC_UNSUP_INST */
         {      0x0,  3,   2 }, /* OFPBIC_BAD_TABLE_ID */
@@ -1737,7 +1836,7 @@ static const struct ofperr_domain ofperr_of11 = {
         {      0x0,  3,   5 }, /* OFPBIC_BAD_EXP_TYPE */
         {       -1, -1,  -1 }, /* OFPBIC_BAD_LEN */
         {       -1, -1,  -1 }, /* OFPBIC_EPERM */
-        { 0x4f4e4600, 2600,  -1 }, /* ONFBIC_DUP_INSTRUCTION */
+        {   0x2320,  3, 256 }, /* OFPBIC_DUP_INST */
         {      0x0,  4,   0 }, /* OFPBMC_BAD_TYPE */
         {      0x0,  4,   1 }, /* OFPBMC_BAD_LEN */
         {      0x0,  4,   2 }, /* OFPBMC_BAD_TAG */
@@ -1777,6 +1876,8 @@ static const struct ofperr_domain ofperr_of11 = {
         {       -1, -1,  -1 }, /* OFPGMFC_BAD_BUCKET */
         {       -1, -1,  -1 }, /* OFPGMFC_BAD_WATCH */
         {       -1, -1,  -1 }, /* OFPGMFC_EPERM */
+        {       -1, -1,  -1 }, /* OFPGMFC_UNKNOWN_BUCKET */
+        {       -1, -1,  -1 }, /* OFPGMFC_BUCKET_EXISTS */
         {      0x0,  7,   0 }, /* OFPPMFC_BAD_PORT */
         {      0x0,  7,   1 }, /* OFPPMFC_BAD_HW_ADDR */
         {      0x0,  7,   2 }, /* OFPPMFC_BAD_CONFIG */
@@ -1834,6 +1935,15 @@ static const struct ofperr_domain ofperr_of11 = {
         {       -1, -1,  -1 }, /* OFPBFC_MSG_FAILED */
         {       -1, -1,  -1 }, /* OFPBFC_TIMEOUT */
         {       -1, -1,  -1 }, /* OFPBFC_BUNDLE_IN_PROGRESS */
+        {       -1, -1,  -1 }, /* NXBFC_BAD_VERSION */
+        {       -1, -1,  -1 }, /* OFPMOFC_UNKNOWN */
+        {   0x2320,  1, 517 }, /* OFPMOFC_MONITOR_EXISTS */
+        {       -1, -1,  -1 }, /* OFPMOFC_INVALID_MONITOR */
+        {   0x2320,  1, 519 }, /* OFPMOFC_UNKNOWN_MONITOR */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_COMMAND */
+        {   0x2320,  1, 518 }, /* OFPMOFC_BAD_FLAGS */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_TABLE_ID */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_OUT */
     },
 };
 
@@ -1879,12 +1989,6 @@ ofperr_of12_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_NXBRC_MUST_BE_ZERO;
     case (0x2320ULL << 32) | (5 << 16) | 0:
         return OFPERR_NXBRC_BAD_REASON;
-    case (0x2320ULL << 32) | (6 << 16) | 0:
-        return OFPERR_NXBRC_FM_DUPLICATE_ID;
-    case (0x2320ULL << 32) | (7 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_FLAGS;
-    case (0x2320ULL << 32) | (8 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_ID;
     case (0x2320ULL << 32) | (9 << 16) | 0:
         return OFPERR_NXBRC_FM_BAD_EVENT;
     case (0x2320ULL << 32) | (10 << 16) | 0:
@@ -1923,6 +2027,8 @@ ofperr_of12_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBAC_BAD_SET_ARGUMENT;
     case (0x2320ULL << 32) | (11 << 16) | 0:
         return OFPERR_NXBAC_MUST_BE_ZERO;
+    case (0x2320ULL << 32) | (15 << 16) | 0:
+        return OFPERR_NXBAC_BAD_CONJUNCTION;
     case (3 << 16) | 0:
         return OFPERR_OFPBIC_UNKNOWN_INST;
     case (3 << 16) | 1:
@@ -1941,6 +2047,8 @@ ofperr_of12_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBIC_BAD_LEN;
     case (3 << 16) | 8:
         return OFPERR_OFPBIC_EPERM;
+    case (0x4f4e4600ULL << 32) | (2600 << 16) | 0:
+        return OFPERR_OFPBIC_DUP_INST;
     case (4 << 16) | 0:
         return OFPERR_OFPBMC_BAD_TYPE;
     case (4 << 16) | 1:
@@ -2049,6 +2157,12 @@ ofperr_of12_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPRRFC_UNSUP;
     case (11 << 16) | 2:
         return OFPERR_OFPRRFC_BAD_ROLE;
+    case (0x2320ULL << 32) | (6 << 16) | 0:
+        return OFPERR_OFPMOFC_MONITOR_EXISTS;
+    case (0x2320ULL << 32) | (8 << 16) | 0:
+        return OFPERR_OFPMOFC_UNKNOWN_MONITOR;
+    case (0x2320ULL << 32) | (7 << 16) | 0:
+        return OFPERR_OFPMOFC_BAD_FLAGS;
     }
 
     return 0;
@@ -2079,9 +2193,6 @@ static const struct ofperr_domain ofperr_of12 = {
         {   0x2320,  3,   0 }, /* NXBRC_NXM_BAD_TYPE */
         {   0x2320,  4,   0 }, /* NXBRC_MUST_BE_ZERO */
         {   0x2320,  5,   0 }, /* NXBRC_BAD_REASON */
-        {   0x2320,  6,   0 }, /* NXBRC_FM_DUPLICATE_ID */
-        {   0x2320,  7,   0 }, /* NXBRC_FM_BAD_FLAGS */
-        {   0x2320,  8,   0 }, /* NXBRC_FM_BAD_ID */
         {   0x2320,  9,   0 }, /* NXBRC_FM_BAD_EVENT */
         {   0x2320, 10,   0 }, /* NXBRC_UNENCODABLE_ERROR */
         {      0x0,  2,   0 }, /* OFPBAC_BAD_TYPE */
@@ -2100,7 +2211,9 @@ static const struct ofperr_domain ofperr_of12 = {
         {      0x0,  2,  13 }, /* OFPBAC_BAD_SET_TYPE */
         {      0x0,  2,  14 }, /* OFPBAC_BAD_SET_LEN */
         {      0x0,  2,  15 }, /* OFPBAC_BAD_SET_ARGUMENT */
+        {       -1, -1,  -1 }, /* OFPBAC_BAD_SET_MASK */
         {   0x2320, 11,   0 }, /* NXBAC_MUST_BE_ZERO */
+        {   0x2320, 15,   0 }, /* NXBAC_BAD_CONJUNCTION */
         {      0x0,  3,   0 }, /* OFPBIC_UNKNOWN_INST */
         {      0x0,  3,   1 }, /* OFPBIC_UNSUP_INST */
         {      0x0,  3,   2 }, /* OFPBIC_BAD_TABLE_ID */
@@ -2110,7 +2223,7 @@ static const struct ofperr_domain ofperr_of12 = {
         {      0x0,  3,   6 }, /* OFPBIC_BAD_EXP_TYPE */
         {      0x0,  3,   7 }, /* OFPBIC_BAD_LEN */
         {      0x0,  3,   8 }, /* OFPBIC_EPERM */
-        { 0x4f4e4600, 2600,  -1 }, /* ONFBIC_DUP_INSTRUCTION */
+        { 0x4f4e4600, 2600,   0 }, /* OFPBIC_DUP_INST */
         {      0x0,  4,   0 }, /* OFPBMC_BAD_TYPE */
         {      0x0,  4,   1 }, /* OFPBMC_BAD_LEN */
         {      0x0,  4,   2 }, /* OFPBMC_BAD_TAG */
@@ -2150,6 +2263,8 @@ static const struct ofperr_domain ofperr_of12 = {
         {      0x0,  6,  12 }, /* OFPGMFC_BAD_BUCKET */
         {      0x0,  6,  13 }, /* OFPGMFC_BAD_WATCH */
         {      0x0,  6,  14 }, /* OFPGMFC_EPERM */
+        {       -1, -1,  -1 }, /* OFPGMFC_UNKNOWN_BUCKET */
+        {       -1, -1,  -1 }, /* OFPGMFC_BUCKET_EXISTS */
         {      0x0,  7,   0 }, /* OFPPMFC_BAD_PORT */
         {      0x0,  7,   1 }, /* OFPPMFC_BAD_HW_ADDR */
         {      0x0,  7,   2 }, /* OFPPMFC_BAD_CONFIG */
@@ -2207,6 +2322,15 @@ static const struct ofperr_domain ofperr_of12 = {
         {       -1, -1,  -1 }, /* OFPBFC_MSG_FAILED */
         {       -1, -1,  -1 }, /* OFPBFC_TIMEOUT */
         {       -1, -1,  -1 }, /* OFPBFC_BUNDLE_IN_PROGRESS */
+        {       -1, -1,  -1 }, /* NXBFC_BAD_VERSION */
+        {       -1, -1,  -1 }, /* OFPMOFC_UNKNOWN */
+        {   0x2320,  6,   0 }, /* OFPMOFC_MONITOR_EXISTS */
+        {       -1, -1,  -1 }, /* OFPMOFC_INVALID_MONITOR */
+        {   0x2320,  8,   0 }, /* OFPMOFC_UNKNOWN_MONITOR */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_COMMAND */
+        {   0x2320,  7,   0 }, /* OFPMOFC_BAD_FLAGS */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_TABLE_ID */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_OUT */
     },
 };
 
@@ -2254,12 +2378,6 @@ ofperr_of13_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_NXBRC_MUST_BE_ZERO;
     case (0x2320ULL << 32) | (5 << 16) | 0:
         return OFPERR_NXBRC_BAD_REASON;
-    case (0x2320ULL << 32) | (6 << 16) | 0:
-        return OFPERR_NXBRC_FM_DUPLICATE_ID;
-    case (0x2320ULL << 32) | (7 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_FLAGS;
-    case (0x2320ULL << 32) | (8 << 16) | 0:
-        return OFPERR_NXBRC_FM_BAD_ID;
     case (0x2320ULL << 32) | (9 << 16) | 0:
         return OFPERR_NXBRC_FM_BAD_EVENT;
     case (0x2320ULL << 32) | (10 << 16) | 0:
@@ -2296,8 +2414,12 @@ ofperr_of13_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBAC_BAD_SET_LEN;
     case (2 << 16) | 15:
         return OFPERR_OFPBAC_BAD_SET_ARGUMENT;
+    case (0x4f4e4600ULL << 32) | (4250 << 16) | 0:
+        return OFPERR_OFPBAC_BAD_SET_MASK;
     case (0x2320ULL << 32) | (11 << 16) | 0:
         return OFPERR_NXBAC_MUST_BE_ZERO;
+    case (0x2320ULL << 32) | (15 << 16) | 0:
+        return OFPERR_NXBAC_BAD_CONJUNCTION;
     case (3 << 16) | 0:
         return OFPERR_OFPBIC_UNKNOWN_INST;
     case (3 << 16) | 1:
@@ -2316,6 +2438,8 @@ ofperr_of13_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBIC_BAD_LEN;
     case (3 << 16) | 8:
         return OFPERR_OFPBIC_EPERM;
+    case (0x4f4e4600ULL << 32) | (2600 << 16) | 0:
+        return OFPERR_OFPBIC_DUP_INST;
     case (4 << 16) | 0:
         return OFPERR_OFPBMC_BAD_TYPE;
     case (4 << 16) | 1:
@@ -2460,6 +2584,24 @@ ofperr_of13_decode(uint32_t vendor, uint16_t type, uint16_t code)
         return OFPERR_OFPBPC_BAD_LEN;
     case (13 << 16) | 4:
         return OFPERR_OFPBPC_BAD_VALUE;
+    case (0x4f4e4600ULL << 32) | (4443 << 16) | 0:
+        return OFPERR_OFPBPC_TOO_MANY;
+    case (0x4f4e4600ULL << 32) | (4444 << 16) | 0:
+        return OFPERR_OFPBPC_DUP_TYPE;
+    case (0x4f4e4600ULL << 32) | (4445 << 16) | 0:
+        return OFPERR_OFPBPC_BAD_EXPERIMENTER;
+    case (0x4f4e4600ULL << 32) | (4446 << 16) | 0:
+        return OFPERR_OFPBPC_BAD_EXP_TYPE;
+    case (0x4f4e4600ULL << 32) | (4447 << 16) | 0:
+        return OFPERR_OFPBPC_BAD_EXP_VALUE;
+    case (0x4f4e4600ULL << 32) | (4448 << 16) | 0:
+        return OFPERR_OFPBPC_EPERM;
+    case (0x2320ULL << 32) | (6 << 16) | 0:
+        return OFPERR_OFPMOFC_MONITOR_EXISTS;
+    case (0x2320ULL << 32) | (8 << 16) | 0:
+        return OFPERR_OFPMOFC_UNKNOWN_MONITOR;
+    case (0x2320ULL << 32) | (7 << 16) | 0:
+        return OFPERR_OFPMOFC_BAD_FLAGS;
     }
 
     return 0;
@@ -2490,9 +2632,6 @@ static const struct ofperr_domain ofperr_of13 = {
         {   0x2320,  3,   0 }, /* NXBRC_NXM_BAD_TYPE */
         {   0x2320,  4,   0 }, /* NXBRC_MUST_BE_ZERO */
         {   0x2320,  5,   0 }, /* NXBRC_BAD_REASON */
-        {   0x2320,  6,   0 }, /* NXBRC_FM_DUPLICATE_ID */
-        {   0x2320,  7,   0 }, /* NXBRC_FM_BAD_FLAGS */
-        {   0x2320,  8,   0 }, /* NXBRC_FM_BAD_ID */
         {   0x2320,  9,   0 }, /* NXBRC_FM_BAD_EVENT */
         {   0x2320, 10,   0 }, /* NXBRC_UNENCODABLE_ERROR */
         {      0x0,  2,   0 }, /* OFPBAC_BAD_TYPE */
@@ -2511,7 +2650,9 @@ static const struct ofperr_domain ofperr_of13 = {
         {      0x0,  2,  13 }, /* OFPBAC_BAD_SET_TYPE */
         {      0x0,  2,  14 }, /* OFPBAC_BAD_SET_LEN */
         {      0x0,  2,  15 }, /* OFPBAC_BAD_SET_ARGUMENT */
+        { 0x4f4e4600, 4250,   0 }, /* OFPBAC_BAD_SET_MASK */
         {   0x2320, 11,   0 }, /* NXBAC_MUST_BE_ZERO */
+        {   0x2320, 15,   0 }, /* NXBAC_BAD_CONJUNCTION */
         {      0x0,  3,   0 }, /* OFPBIC_UNKNOWN_INST */
         {      0x0,  3,   1 }, /* OFPBIC_UNSUP_INST */
         {      0x0,  3,   2 }, /* OFPBIC_BAD_TABLE_ID */
@@ -2521,7 +2662,7 @@ static const struct ofperr_domain ofperr_of13 = {
         {      0x0,  3,   6 }, /* OFPBIC_BAD_EXP_TYPE */
         {      0x0,  3,   7 }, /* OFPBIC_BAD_LEN */
         {      0x0,  3,   8 }, /* OFPBIC_EPERM */
-        { 0x4f4e4600, 2600,  -1 }, /* ONFBIC_DUP_INSTRUCTION */
+        { 0x4f4e4600, 2600,   0 }, /* OFPBIC_DUP_INST */
         {      0x0,  4,   0 }, /* OFPBMC_BAD_TYPE */
         {      0x0,  4,   1 }, /* OFPBMC_BAD_LEN */
         {      0x0,  4,   2 }, /* OFPBMC_BAD_TAG */
@@ -2561,6 +2702,8 @@ static const struct ofperr_domain ofperr_of13 = {
         {      0x0,  6,  12 }, /* OFPGMFC_BAD_BUCKET */
         {      0x0,  6,  13 }, /* OFPGMFC_BAD_WATCH */
         {      0x0,  6,  14 }, /* OFPGMFC_EPERM */
+        {       -1, -1,  -1 }, /* OFPGMFC_UNKNOWN_BUCKET */
+        {       -1, -1,  -1 }, /* OFPGMFC_BUCKET_EXISTS */
         {      0x0,  7,   0 }, /* OFPPMFC_BAD_PORT */
         {      0x0,  7,   1 }, /* OFPPMFC_BAD_HW_ADDR */
         {      0x0,  7,   2 }, /* OFPPMFC_BAD_CONFIG */
@@ -2596,12 +2739,12 @@ static const struct ofperr_domain ofperr_of13 = {
         {      0x0, 13,   2 }, /* OFPBPC_BAD_TYPE */
         {      0x0, 13,   3 }, /* OFPBPC_BAD_LEN */
         {      0x0, 13,   4 }, /* OFPBPC_BAD_VALUE */
-        {       -1, -1,  -1 }, /* OFPBPC_TOO_MANY */
-        {       -1, -1,  -1 }, /* OFPBPC_DUP_TYPE */
-        {       -1, -1,  -1 }, /* OFPBPC_BAD_EXPERIMENTER */
-        {       -1, -1,  -1 }, /* OFPBPC_BAD_EXP_TYPE */
-        {       -1, -1,  -1 }, /* OFPBPC_BAD_EXP_VALUE */
-        {       -1, -1,  -1 }, /* OFPBPC_EPERM */
+        { 0x4f4e4600, 4443,   0 }, /* OFPBPC_TOO_MANY */
+        { 0x4f4e4600, 4444,   0 }, /* OFPBPC_DUP_TYPE */
+        { 0x4f4e4600, 4445,   0 }, /* OFPBPC_BAD_EXPERIMENTER */
+        { 0x4f4e4600, 4446,   0 }, /* OFPBPC_BAD_EXP_TYPE */
+        { 0x4f4e4600, 4447,   0 }, /* OFPBPC_BAD_EXP_VALUE */
+        { 0x4f4e4600, 4448,   0 }, /* OFPBPC_EPERM */
         {       -1, -1,  -1 }, /* OFPBFC_UNKNOWN */
         {       -1, -1,  -1 }, /* OFPBFC_EPERM */
         {       -1, -1,  -1 }, /* OFPBFC_BAD_ID */
@@ -2618,5 +2761,14 @@ static const struct ofperr_domain ofperr_of13 = {
         {       -1, -1,  -1 }, /* OFPBFC_MSG_FAILED */
         {       -1, -1,  -1 }, /* OFPBFC_TIMEOUT */
         {       -1, -1,  -1 }, /* OFPBFC_BUNDLE_IN_PROGRESS */
+        {       -1, -1,  -1 }, /* NXBFC_BAD_VERSION */
+        {       -1, -1,  -1 }, /* OFPMOFC_UNKNOWN */
+        {   0x2320,  6,   0 }, /* OFPMOFC_MONITOR_EXISTS */
+        {       -1, -1,  -1 }, /* OFPMOFC_INVALID_MONITOR */
+        {   0x2320,  8,   0 }, /* OFPMOFC_UNKNOWN_MONITOR */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_COMMAND */
+        {   0x2320,  7,   0 }, /* OFPMOFC_BAD_FLAGS */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_TABLE_ID */
+        {       -1, -1,  -1 }, /* OFPMOFC_BAD_OUT */
     },
 };

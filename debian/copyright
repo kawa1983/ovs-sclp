@@ -7,31 +7,40 @@ Upstream Authors (from AUTHORS):
   Aaron Rosen             arosen@clemson.edu
   Alexandru Copot         alex.mihai.c@gmail.com
   Alexei Starovoitov      ast@plumgrid.com
-  Alexey I. Froloff       raorn@altlinux.org
+  Alexey I. Froloff       raorn@raorn.name
   Alex Wang               alexw@nicira.com
   Alfredo Finelli         alf@computationes.de
   Alin Serdean            aserdean@cloudbasesolutions.com
+  Amit Bose               bose@noironetworks.com
   Andrew Evans            aevans@nicira.com
+  Andrew Kampjes          a.kampjes@gmail.com
   Andrew Lambeth          wal@nicira.com
   Andy Hill               hillad@gmail.com
   Andy Southgate          andy.southgate@citrix.com
   Andy Zhou               azhou@nicira.com
+  Ankur Sharma            ankursharma@vmware.com
   Anoob Soman             anoob.soman@citrix.com
   Ansis Atteka            aatteka@nicira.com
   Anupam Chanda           achanda@nicira.com
+  Ariel Tubaltsev         atubaltsev@vmware.com
   Arun Sharma             arun.sharma@calsoftinc.com
   Aryan TaheriMonfared    aryan.taherimonfared@uis.no
   Ashwin Swaminathan      ashwinds@arista.com
   Ben Pfaff               blp@nicira.com
+  Billy O'Mahony          billy.o.mahony@intel.com
   Brian Kruger            bkruger+ovsdev@gmail.com
   Bruce Davie             bsd@nicira.com
   Bryan Phillippe         bp@toroki.com
   Casey Barker            crbarker@google.com
+  Christoph Jaeger        cj@linux.com
   Chris Wright            chrisw@sous-sol.org
   Chuck Short             zulcss@ubuntu.com
+  Cong Wang               amwang@redhat.com
   Damien Millescamps      damien.millescamps@6wind.com
   Dan Carpenter           dan.carpenter@oracle.com
+  Dan McGregor            dan.mcgregor@usask.ca
   Dan Wendlandt           dan@nicira.com
+  Daniel Borkmann         dborkman@redhat.com
   Daniel Hiltgen          daniel@netkine.com
   Daniel Roman            droman@nicira.com
   Daniele Di Proietto     daniele.di.proietto@gmail.com
@@ -42,24 +51,33 @@ Upstream Authors (from AUTHORS):
   David S. Miller         davem@davemloft.net
   David Yang              davidy@vmware.com
   Devendra Naga           devendra.aaru@gmail.com
+  Dmitry Krivenok         krivenok.dmitry@gmail.com
   Dominic Curran          dominic.curran@citrix.com
+  Dongdong                dongdong1@huawei.com
   Duffie Cooley           dcooley@nicira.com
   Ed Maste                emaste at freebsd.org
+  Ed Swierk               eswierk@skyportsystems.com
   Edouard Bourguignon     madko@linuxed.net
   Edward Tomasz Napierała trasz@freebsd.org
+  Eitan Eliahu            eliahue@vmware.com
+  Eohyung Lee             liquidnuker@gmail.com
+  Eric Sesterhenn         eric.sesterhenn@lsexperts.de
   Ethan Jackson           ethan@nicira.com
   Flavio Leitner          fbl@redhat.com
   Francesco Fusco         ffusco@redhat.com
   FUJITA Tomonori         fujita.tomonori@lab.ntt.co.jp
   Gaetano Catalli         gaetano.catalli@gmail.com
   Geoffrey Wossum         gwossum@acm.org
+  Gianluca Merlo          gianluca.merlo@gmail.com
   Giuseppe Lettieri       g.lettieri@iet.unipi.it
   Glen Gibb               grg@stanford.edu
   Guolin Yang             gyang@nicira.com
+  Guru Chaitanya Perakam  gperakam@Brocade.com
   Gurucharan Shetty       gshetty@nicira.com
   Henry Mai               hmai@nicira.com
   Hao Zheng               hzheng@nicira.com
   Helmut Schaa            helmut.schaa@googlemail.com
+  Huanle Han              hanxueluo@gmail.com
   Ian Campbell            Ian.Campbell@citrix.com
   Isaku Yamahata          yamahata@valinux.co.jp
   James P.                roampune@gmail.com
@@ -74,61 +92,100 @@ Upstream Authors (from AUTHORS):
   Jing Ai                 jinga@google.com
   Joe Perches             joe@perches.com
   Joe Stringer            joestringer@nicira.com
+  Jonathan Vestin         jonavest@kau.se
   Jun Nakajima            jun.nakajima@intel.com
   Justin Pettit           jpettit@nicira.com
   Keith Amidon            keith@nicira.com
   Ken Ajiro               ajiro@mxw.nes.nec.co.jp
+  Kenneth Duda            kduda@arista.com
+  Kentaro Ebisawa         ebiken.g@gmail.com
+  Kevin Lo                kevlo@FreeBSD.org
+  Kevin Traynor           kevin.traynor@intel.com
   Kmindg G                kmindg@gmail.com
   Krishna Kondaka         kkondaka@vmware.com
-  Kyle Mestery            kmestery@cisco.com
+  Kyle Mestery            mestery@mestery.com
+  Kyle Upton              kupton@baymicrosystems.com
+  Lars Kellogg-Stedman    lars@redhat.com
   Leo Alterman            lalterman@nicira.com
+  Lilijun                 jerry.lilijun@huawei.com
   Linda Sun               lsun@vmware.com
   Lior Neudorfer          lior@guardicore.com
   Lorand Jakab            lojakab@cisco.com
   Luca Giraudo            lgiraudo@nicira.com
+  Lucian Petrut           lpetrut@cloudbasesolutions.com
   Luigi Rizzo             rizzo@iet.unipi.it
+  Madhu Challa            challa@noironetworks.com
+  Mark D. Gray            mark.d.gray@intel.com
   Mark Hamilton           mhamilton@nicira.com
+  Mark Kavanagh           mark.b.kavanagh@intel.com
+  Mark Maglana            mmaglana@gmail.com
   Martin Casado           casado@nicira.com
+  Martino Fornasa         mf@fornasa.it
+  Maryam Tahhan           maryam.tahhan@intel.com
   Mehak Mahajan           mmahajan@nicira.com
+  Mijo Safradin           mijo@linux.vnet.ibm.com
   Murphy McCauley         murphy.mccauley@gmail.com
   Natasha Gude            natasha@nicira.com
   Neil McKee              neil.mckee@inmon.com
   Neil Zhu                zhuj@centecnetworks.com
+  Nithin Raju             nithin@vmware.com
   Padmanabhan Krishnan    kprad1@yahoo.com
   Paraneetharan Chandrasekaran    paraneetharanc@gmail.com
   Paul Fazzone            pfazzone@nicira.com
   Paul Ingram             paul@nicira.com
+  Paul-Emmanuel Raoul     skyper@skyplabs.net
   Pavithra Ramesh         paramesh@vmware.com
   Philippe Jung           phil.jung@free.fr
+  Pim van den Berg        pim@nethuis.nl
   pritesh                 pritesh.kothari@cisco.com
   Pravin B Shelar         pshelar@nicira.com
   Raju Subramanian        rsubramanian@nicira.com
   Rami Rosen              ramirose@gmail.com
+  Randall Sharo           andall.sharo@navy.mil
   Ravi Kerur              Ravi.Kerur@telekom.com
   Reid Price              reid@nicira.com
   Remko Tronçon           git@el-tramo.be
   Rich Lane               rlane@bigswitch.com
+  Rishi Bamba             rishi.bamba@tcs.com
+  Rob Adams               readams@readams.net
+  Robert Åkerblom-Andersson Robert.nr1@gmail.com
   Rob Hoes                rob.hoes@citrix.com
   Romain Lenglet          romain.lenglet@berabera.info
+  Russell Bryant          rbryant@redhat.com
+  Ryan Wilson             wryan@nicira.com
   Sajjad Lateef           slateef@nicira.com
+  Samuel Ghinet           sghinet@cloudbasesolutions.com
   Sanjay Sane             ssane@nicira.com
   Saurabh Shah            ssaurabh@nicira.com
+  Scott Lowe              scott.lowe@scottlowe.org
+  Scott Mann              sdmnix@gmail.com
+  Selvamuthukumar         smkumar@merunetworks.com
   Shan Wei                davidshan@tencent.com
   Shih-Hao Li             shli@nicira.com
+  Shu Shen                shu.shen@radisys.com
   Simon Horman            horms@verge.net.au
+  Simon Horman            simon.horman@netronome.com
+  Sorin Vinturis          svinturis@cloudbasesolutions.com
   Stephane A. Sezer       sas@cd80.net
+  Stephen Finucane        stephen.finucane@intel.com
   SUGYO Kazushi           sugyo.org@gmail.com
   Tadaaki Nagao           nagao@stratosphere.co.jp
+  Terry Wilson            twilson@redhat.com
   Tetsuo NAKAGAWA         nakagawa@mxc.nes.nec.co.jp
+  Thadeu Lima de Souza Cascardo    cascardo@redhat.com
+  Thomas F. Herbert       thomasfherbert@gmail.com
   Thomas Goirand          zigo@debian.org
-  Thomas Graf             tgraf@redhat.com
+  Thomas Graf             tgraf@noironetworks.com
   Thomas Lacroix          thomas.lacroix@citrix.com
   Todd Deshane            deshantm@gmail.com
   Tom Everman             teverman@google.com
   Tsvi Slonim             tsvi@toroki.com
+  Tuan Nguyen             tuan.nguyen@veriksystems.com
   Tyler Coumbes           coumbes@gmail.com
   Valient Gough           vgough@pobox.com
   Vivien Bernet-Rollande  vbr@soprive.net
+  Wang Sheng-Hui          shhuiw@gmail.com
+  Wei Li                  liw@dtdream.com
   Wei Yongjun             yjwei@cn.fujitsu.com
   William Fulton
   YAMAMOTO Takashi        yamamoto@midokura.com
@@ -151,6 +208,10 @@ Upstream Copyright Holders:
 	Copyright (C) 2000 The NetBSD Foundation, Inc.
 	Copyright (C) 1995, 1996, 1997, and 1998 WIDE Project.
 	Copyright (c) 1982, 1986, 1990, 1993 The Regents of the University of California.
+	Copyright (c) 2008, 2012 Vincent Bernat <bernat@luffy.cx>
+	Copyright (c) 2014 Michael Chapman
+	Copyright (c) 2014 WindRiver, Inc.
+	Copyright (c) 2014 Avaya, Inc.
 
 License:
 
@@ -229,7 +290,7 @@ License:
 * The following components are dual-licensed under the
   GNU General Public License version 2 and the Apache License Version 2.0.
 
-	include/linux/openvswitch.h
+	datapath/linux/compat/include/linux/openvswitch.h
 
   On Debian systems, the complete text of the GNU General Public License
   version 2 can be found in `/usr/share/common-licenses/GPL-2'.
@@ -337,6 +398,17 @@ License:
     This file is free software; the Free Software Foundation
     gives unlimited permission to copy and/or distribute it,
     with or without modifications, as long as this notice is preserved.
+
+* The following files are licensed under the ISC-license
+
+    lib/lldp/aa-structs.h
+    lib/lldp/lldpd.c
+    lib/lldp/lldpd.h
+    lib/lldp/lldpd-structs.c
+    lib/lldp/lldpd-structs.h
+    lib/lldp/lldp.c
+    lib/lldp/lldp-tlv.h
+    lib/lldp/lldp-const.h
 
 * All other components of this package are licensed under
   The Apache License Version 2.0.

@@ -4,7 +4,7 @@
 #include_next <linux/in.h>
 
 #include <linux/module.h>
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) && \
+#if (!defined(RHEL_RELEASE_CODE) && (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37))) || \
     (RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(6, 7))
 static inline int proto_ports_offset(int proto)
 {

@@ -5,7 +5,7 @@
 
 #include <linux/version.h>
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0)) && \
+#if (!defined(RHEL_RELEASE_CODE) && (LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0))) || \
     (RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(6, 7))
 static inline bool ip_is_fragment(const struct iphdr *iph)
 {
@@ -13,8 +13,7 @@ static inline bool ip_is_fragment(const struct iphdr *iph)
 }
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,13,0) && \
-    (RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(7, 1))
+#ifndef HAVE_INET_GET_LOCAL_PORT_RANGE_USING_NET
 static inline void rpl_inet_get_local_port_range(struct net *net, int *low,
 					     int *high)
 {

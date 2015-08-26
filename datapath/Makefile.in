@@ -34,7 +34,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @LINUX_ENABLED_TRUE@am__append_1 = linux
-DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Modules.mk $(srcdir)/linux/Modules.mk
 subdir = datapath
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -121,6 +121,7 @@ DBDIR = @DBDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DPDK_vswitchd_LDFLAGS = @DPDK_vswitchd_LDFLAGS@
 DSYMUTIL = @DSYMUTIL@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
@@ -150,9 +151,13 @@ LIPO = @LIPO@
 LN_S = @LN_S@
 LOGDIR = @LOGDIR@
 LTLIBOBJS = @LTLIBOBJS@
+LT_AGE = @LT_AGE@
+LT_CURRENT = @LT_CURRENT@
+LT_REVISION = @LT_REVISION@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+MSVC_CFLAGS = @MSVC_CFLAGS@
 NEXT_AS_FIRST_DIRECTIVE_STDIO_H = @NEXT_AS_FIRST_DIRECTIVE_STDIO_H@
 NEXT_AS_FIRST_DIRECTIVE_STRING_H = @NEXT_AS_FIRST_DIRECTIVE_STRING_H@
 NEXT_STDIO_H = @NEXT_STDIO_H@
@@ -163,6 +168,8 @@ OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
+OVS_CFLAGS = @OVS_CFLAGS@
+OVS_LDFLAGS = @OVS_LDFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -179,6 +186,7 @@ PRAGMA_SYSTEM_HEADER = @PRAGMA_SYSTEM_HEADER@
 PTHREAD_INCLUDES = @PTHREAD_INCLUDES@
 PTHREAD_LDFLAGS = @PTHREAD_LDFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
+PTHREAD_WIN32_DIR_DLL = @PTHREAD_WIN32_DIR_DLL@
 PYTHON = @PYTHON@
 RANLIB = @RANLIB@
 RUNDIR = @RUNDIR@
@@ -193,6 +201,7 @@ SSL_LDFLAGS = @SSL_LDFLAGS@
 SSL_LIBS = @SSL_LIBS@
 STRIP = @STRIP@
 VERSION = @VERSION@
+VSTUDIO_CONFIG = @VSTUDIO_CONFIG@
 WARNING_FLAGS = @WARNING_FLAGS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -247,7 +256,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = $(am__append_1)
-EXTRA_DIST = $(dist_headers) $(dist_sources) $(dist_extras)
+EXTRA_DIST = $(dist_headers) $(dist_sources) $(dist_extras) \
+	linux/compat/build-aux/export-check-whitelist
 
 # Suppress warnings about GNU extensions in Modules.mk files.
 AUTOMAKE_OPTIONS = -Wno-portability
@@ -256,26 +266,44 @@ AUTOMAKE_OPTIONS = -Wno-portability
 #
 # Some modules should be built but not distributed, e.g. third-party
 # hwtable modules.
-both_modules = openvswitch
+build_multi_modules = \
+	openvswitch
+
+both_modules = \
+	$(build_multi_modules) \
+	vport_geneve \
+	vport_gre \
+	vport_lisp \
+	vport_stt \
+	vport_vxlan \
+	vport_vxlan_sclp
+
+# When changing the name of 'build_modules', please also update the
+# print-build-modules in Makefile.am.
 build_modules = $(both_modules)	# Modules to build
 dist_modules = $(both_modules)	# Modules to distribute
 openvswitch_sources = actions.c datapath.c dp_notify.c flow.c \
-	flow_netlink.c flow_table.c vport.c vport-gre.c \
-	vport-internal_dev.c vport-lisp.c vport-netdev.c vport-vxlan.c vport-vxlan-sclp.c \
-	linux/compat/dev-openvswitch.c linux/compat/exthdrs_core.c \
-	linux/compat/flex_array.c linux/compat/flow_dissector.c \
+	flow_netlink.c flow_table.c vport.c vport-internal_dev.c \
+	vport-netdev.c linux/compat/dev-openvswitch.c \
+	linux/compat/exthdrs_core.c linux/compat/flex_array.c \
+	linux/compat/flow_dissector.c linux/compat/geneve.c \
 	linux/compat/gre.c linux/compat/gso.c \
-	linux/compat/genetlink-openvswitch.c linux/compat/hash.c \
-	linux/compat/hash-x86.c linux/compat/ip_tunnels_core.c \
-	linux/compat/netdevice.c linux/compat/net_namespace.c \
-	linux/compat/reciprocal_div.c \
-	linux/compat/skbuff-openvswitch.c linux/compat/vxlan.c linux/compat/vxlan_sclp.c \
-	linux/compat/utils.c
+	linux/compat/genetlink-openvswitch.c \
+	linux/compat/ip_tunnels_core.c linux/compat/netdevice.c \
+	linux/compat/net_namespace.c linux/compat/reciprocal_div.c \
+	linux/compat/skbuff-openvswitch.c linux/compat/stt.c \
+	linux/compat/udp.c linux/compat/udp_tunnel.c \
+	linux/compat/vxlan.c linux/compat/utils.c
+vport_geneve_sources = vport-geneve.c
+vport_vxlan_sources = vport-vxlan.c
+vport_vxlan_sclp_sources = vport-vxlan-sclp.c
+vport_gre_sources = vport-gre.c
+vport_lisp_sources = vport-lisp.c
+vport_stt_sources = vport-stt.c
 openvswitch_headers = compat.h datapath.h flow.h flow_netlink.h \
 	flow_table.h vlan.h vport.h vport-internal_dev.h \
-	vport-netdev.h linux/compat/gso.h \
-	linux/compat/include/asm/hash.h \
-	linux/compat/include/asm/percpu.h \
+	vport-netdev.h vport-vxlan.h linux/compat/gso.h \
+	linux/compat/include/linux/percpu.h \
 	linux/compat/include/linux/bug.h \
 	linux/compat/include/linux/compiler.h \
 	linux/compat/include/linux/compiler-gcc.h \
@@ -283,7 +311,6 @@ openvswitch_headers = compat.h datapath.h flow.h flow_netlink.h \
 	linux/compat/include/linux/err.h \
 	linux/compat/include/linux/etherdevice.h \
 	linux/compat/include/linux/flex_array.h \
-	linux/compat/include/linux/hash.h \
 	linux/compat/include/linux/icmp.h \
 	linux/compat/include/linux/icmpv6.h \
 	linux/compat/include/linux/if.h \
@@ -297,12 +324,13 @@ openvswitch_headers = compat.h datapath.h flow.h flow_netlink.h \
 	linux/compat/include/linux/kconfig.h \
 	linux/compat/include/linux/kernel.h \
 	linux/compat/include/linux/list.h \
-	linux/compat/include/linux/log2.h \
+	linux/compat/include/linux/mpls.h \
 	linux/compat/include/linux/net.h \
 	linux/compat/include/linux/random.h \
 	linux/compat/include/linux/netdevice.h \
 	linux/compat/include/linux/netdev_features.h \
 	linux/compat/include/linux/netlink.h \
+	linux/compat/include/linux/openvswitch.h \
 	linux/compat/include/linux/poison.h \
 	linux/compat/include/linux/rculist.h \
 	linux/compat/include/linux/rcupdate.h \
@@ -321,20 +349,24 @@ openvswitch_headers = compat.h datapath.h flow.h flow_netlink.h \
 	linux/compat/include/net/dst.h \
 	linux/compat/include/net/flow_keys.h \
 	linux/compat/include/net/genetlink.h \
+	linux/compat/include/net/geneve.h \
 	linux/compat/include/net/gre.h \
 	linux/compat/include/net/inet_frag.h \
 	linux/compat/include/net/ip.h \
 	linux/compat/include/net/ip_tunnels.h \
 	linux/compat/include/net/ipv6.h \
+	linux/compat/include/net/mpls.h \
 	linux/compat/include/net/net_namespace.h \
 	linux/compat/include/net/netlink.h \
-	linux/compat/include/net/sock.h linux/compat/include/net/udp.h \
+	linux/compat/include/net/udp.h \
+	linux/compat/include/net/udp_tunnel.h \
+	linux/compat/include/net/sock.h linux/compat/include/net/stt.h \
 	linux/compat/include/net/vxlan.h \
 	linux/compat/include/net/sclp_tunnel.h \
 	linux/compat/include/net/sctp/checksum.h \
 	linux/compat/include/uapi/linux/sclp.h
 openvswitch_extras = \
-	README
+	README.md
 
 dist_sources = $(foreach module,$(dist_modules),$($(module)_sources))
 dist_headers = $(foreach module,$(dist_modules),$($(module)_headers))
@@ -344,6 +376,14 @@ build_headers = $(foreach module,$(build_modules),$($(module)_headers))
 build_links = $(notdir $(build_sources))
 build_objects = $(notdir $(patsubst %.c,%.o,$(build_sources)))
 CLEANFILES = distfiles
+COMPAT_GET_FUNCTIONS := find $(top_srcdir)/datapath/linux/compat -name "*.h" \
+	-exec sed -n '/^[a-z][a-z]* \*\?[A-Za-z0-9_][A-Za-z0-9_]*([a-z]/p; /^struct [a-z0-9_][a-z0-9_]* \*\?[A-Za-z0-9_][A-Za-z0-9_]*([a-z]/p' {} \; | tr -d '*' | cut -d '(' -f1 | rev | cut -d ' ' -f1 | rev
+
+COMPAT_GET_EXPORTS := find $(top_srcdir)/datapath/linux/compat -name "*.c" \
+	-exec sed -n 's/^EXPORT_SYMBOL[A-Z_]*(\([a-z_][a-z_]*\));$$/\1/p' {} \;
+
+COMPAT_FUNCTIONS := $(shell $(COMPAT_GET_FUNCTIONS))
+COMPAT_EXPORTS := $(shell $(COMPAT_GET_EXPORTS))
 all: all-recursive
 
 .SUFFIXES:
@@ -356,9 +396,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Modules.mk $(srcdir)/lin
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign datapath/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu datapath/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign datapath/Makefile
+	  $(AUTOMAKE) --gnu datapath/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -579,7 +619,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile
+all-am: Makefile all-local
 installdirs: installdirs-recursive
 installdirs-am:
 install: install-recursive
@@ -678,18 +718,18 @@ uninstall-am:
 	install-am install-strip tags-recursive
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
-	all all-am check check-am clean clean-generic clean-libtool \
-	ctags ctags-recursive distclean distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am
+	all all-am all-local check check-am clean clean-generic \
+	clean-libtool ctags ctags-recursive distclean \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am
 
 
 # The following is based on commands for the Automake "distdir" target.
@@ -700,6 +740,35 @@ distfiles: Makefile
 	for file in $$list; do echo $$file; done | \
 	  sed -e "s|^$$srcdirstrip/||;t" \
 	      -e "s|^$$topsrcdirstrip/|$(top_builddir)/|;t" | sort -u > $@
+
+# Print name of all modules.
+print-build-modules:
+	@if test -z "$(build_modules)"; \
+	then \
+	   echo "Could not find any kernel module."; \
+	   exit 1; \
+	fi
+	@echo "$(build_modules)" | tr '_' '-';
+
+# Checks that all public functions are 'rpl_' or 'ovs_' prefixed.
+# Checks that all EXPORT_SYMBOL_GPL() export 'rpl_' or 'ovs_' prefixed functions.
+check-export-symbol:
+	@for fun_ in $(COMPAT_FUNCTIONS); do \
+	   if ! grep -- $${fun_} $(top_srcdir)/datapath/linux/compat/build-aux/export-check-whitelist > /dev/null; then \
+	      if ! echo $${fun_} | grep -q -E '^(rpl|ovs)_'; then \
+	         echo "error: $${fun_}() needs to be prefixed with 'rpl_' or 'ovs_'."; \
+	         exit 1; \
+	      fi; \
+	   fi; \
+	done
+	@for fun_ in $(COMPAT_EXPORTS); do \
+	   if ! echo $${fun_} | grep -q -E '^(rpl|ovs)_'; then \
+	      echo "error: $${fun_}() needs to be prefixed with 'rpl_' or 'ovs_'."; \
+	      exit 1; \
+	   fi; \
+	done
+
+#all-local: check-export-symbol
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

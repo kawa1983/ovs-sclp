@@ -1,7 +1,7 @@
 # Generated automatically -- do not modify!    -*- buffer-read-only: t -*-
 # Spec file for Open vSwitch on Red Hat Enterprise Linux.
 
-# Copyright (C) 2009, 2010, 2011, 2012, 2013 Nicira, Inc.
+# Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Nicira, Inc.
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -17,13 +17,13 @@ Summary: Open vSwitch daemon/database/utilities
 Group: System Environment/Daemons
 URL: http://www.openvswitch.org/
 Vendor: Nicira, Inc.
-Version: 2.3.2
+Version: 2.4.0
 
 License: ASL 2.0
 Release: 1
 Source: openvswitch-%{version}.tar.gz
 Buildroot: /tmp/openvswitch-rpm
-Requires: openvswitch-kmod, logrotate, python
+Requires: logrotate, python
 BuildRequires: openssl-devel
 
 %bcond_with check
@@ -58,14 +58,13 @@ rhel_cp etc_sysconfig_network-scripts_ifup-ovs 0755
 rhel_cp etc_sysconfig_network-scripts_ifdown-ovs 0755
 rhel_cp usr_share_openvswitch_scripts_sysconfig.template 0644
 
-docdir=$RPM_BUILD_ROOT/usr/share/doc/openvswitch-%{version}
-install -d -m755 "$docdir"
-install -m 0644 FAQ rhel/README.RHEL "$docdir"
 install python/compat/uuid.py $RPM_BUILD_ROOT/usr/share/openvswitch/python
 install python/compat/argparse.py $RPM_BUILD_ROOT/usr/share/openvswitch/python
 
 # Get rid of stuff we don't want to make RPM happy.
 rm \
+    $RPM_BUILD_ROOT/usr/bin/ovs-testcontroller \
+    $RPM_BUILD_ROOT/usr/share/man/man8/ovs-testcontroller.8 \
     $RPM_BUILD_ROOT/usr/bin/ovs-test \
     $RPM_BUILD_ROOT/usr/bin/ovs-l3ping \
     $RPM_BUILD_ROOT/usr/share/man/man8/ovs-test.8 \
@@ -73,6 +72,7 @@ rm \
     $RPM_BUILD_ROOT/usr/sbin/ovs-vlan-bug-workaround \
     $RPM_BUILD_ROOT/usr/share/man/man8/ovs-vlan-bug-workaround.8
 (cd "$RPM_BUILD_ROOT" && rm -rf usr/lib)
+(cd "$RPM_BUILD_ROOT" && rm -rf usr/include)
 
 install -d -m 755 $RPM_BUILD_ROOT/var/lib/openvswitch
 
@@ -126,6 +126,8 @@ exit 0
 
 %files
 %defattr(-,root,root)
+/etc/bash_completion.d/ovs-appctl-bashcomp.bash
+/etc/bash_completion.d/ovs-vsctl-bashcomp.bash
 /etc/init.d/openvswitch
 %config(noreplace) /etc/logrotate.d/openvswitch
 /etc/sysconfig/network-scripts/ifup-ovs
@@ -134,6 +136,7 @@ exit 0
 /usr/bin/ovs-benchmark
 /usr/bin/ovs-dpctl
 /usr/bin/ovs-dpctl-top
+/usr/bin/ovs-docker
 /usr/bin/ovs-ofctl
 /usr/bin/ovs-parse-backtrace
 /usr/bin/ovs-pcap
@@ -178,7 +181,7 @@ exit 0
 /usr/share/openvswitch/scripts/sysconfig.template
 /usr/share/openvswitch/vswitch.ovsschema
 /usr/share/openvswitch/vtep.ovsschema
-/usr/share/doc/openvswitch-%{version}/FAQ
-/usr/share/doc/openvswitch-%{version}/README.RHEL
+%doc COPYING DESIGN.md INSTALL.SSL.md NOTICE README.md WHY-OVS.md FAQ.md NEWS
+%doc INSTALL.DPDK.md rhel/README.RHEL README-native-tunneling.md
 /var/lib/openvswitch
 /var/log/openvswitch

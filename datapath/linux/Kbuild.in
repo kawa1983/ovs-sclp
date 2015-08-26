@@ -7,11 +7,11 @@ export VERSION = @VERSION@
 include $(srcdir)/../Modules.mk
 include $(srcdir)/Modules.mk
 
-EXTRA_CFLAGS := -DVERSION=\"$(VERSION)\"
-EXTRA_CFLAGS += -I$(srcdir)/..
-EXTRA_CFLAGS += -I$(builddir)/..
-EXTRA_CFLAGS += -g
-EXTRA_CFLAGS += -include $(builddir)/kcompat.h
+ccflags-y := -DVERSION=\"$(VERSION)\"
+ccflags-y += -I$(srcdir)/..
+ccflags-y += -I$(builddir)/..
+ccflags-y += -g
+ccflags-y += -include $(builddir)/kcompat.h
 KBUILD_EXTRA_SYMBOLS := /lib/modules/$(shell uname -r)/extra/sclp/Module.symvers
 
 # These include directories have to go before -I$(KSRC)/include.
@@ -19,10 +19,10 @@ KBUILD_EXTRA_SYMBOLS := /lib/modules/$(shell uname -r)/extra/sclp/Module.symvers
 # right place, even though it's conceptually incorrect.
 NOSTDINC_FLAGS += -I$(top_srcdir)/include -I$(srcdir)/compat -I$(srcdir)/compat/include
 
-obj-m := $(patsubst %,%.o,$(build_modules))
+obj-m := $(subst _,-,$(patsubst %,%.o,$(build_modules)))
 
 define module_template
 $(1)-y = $$(notdir $$(patsubst %.c,%.o,$($(1)_sources)))
 endef
 
-$(foreach module,$(build_modules),$(eval $(call module_template,$(module))))
+$(foreach module,$(build_multi_modules),$(eval $(call module_template,$(module))))
