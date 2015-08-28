@@ -148,7 +148,7 @@ static struct stt_sock *stt_find_sock(struct net *net, __be16 port)
 	struct stt_sock *stt_sock;
 
 	list_for_each_entry_rcu(stt_sock, &sn->sock_list, list) {
-		if (inet_sk(stt_sock->sock->sk)->inet_sport == port)
+		if (inet_sport(stt_sock->sock->sk) == port)
 			return stt_sock;
 	}
 	return NULL;
@@ -157,11 +157,12 @@ static struct stt_sock *stt_find_sock(struct net *net, __be16 port)
 static __be32 ack_seq(void)
 {
 #if NR_CPUS <= 65536
-	u32 pkt_seq, ack;
+	u32 *pkt_seq;
+	u32 ack;
 
-	pkt_seq = this_cpu_read(pkt_seq_counter);
-	ack = pkt_seq << ilog2(NR_CPUS) | smp_processor_id();
-	this_cpu_inc(pkt_seq_counter);
+	pkt_seq = &__get_cpu_var(pkt_seq_counter);
+	ack = *pkt_seq << ilog2(NR_CPUS) | smp_processor_id();
+	(*pkt_seq)++;
 
 	return (__force __be32)ack;
 #else
@@ -445,6 +446,7 @@ static int coalesce_skb(struct sk_buff **headp)
 		return err;
 	head = *headp;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0)
 	/* Coalesce frag list. */
 	prev = head;
 	for (frag = head->next; frag; frag = frag->next) {
@@ -466,7 +468,7 @@ static int coalesce_skb(struct sk_buff **headp)
 		kfree_skb_partial(frag, headstolen);
 		frag = prev;
 	}
-
+#endif
 	if (!head->next)
 		return 0;
 
@@ -478,6 +480,7 @@ static int coalesce_skb(struct sk_buff **headp)
 
 	skb_shinfo(head)->frag_list = head->next;
 	head->next = NULL;
+
 	return 0;
 }
 
@@ -784,7 +787,7 @@ static int skb_list_xmit(struct rtable *rt, struct sk_buff *skb, __be32 src,
 		struct sk_buff *next = skb->next;
 
 		if (next)
-			dst_clone(&rt->dst);
+			dst_clone(&rt_dst(rt));
 
 		skb_clear_ovs_gso_cb(skb);
 		skb->next = NULL;
@@ -846,7 +849,7 @@ int rpl_stt_xmit_skb(struct sk_buff *skb, struct rtable *rt,
 	inner_l3_proto = eh->h_proto;
 	inner_l4_proto = skb_get_l4_proto(skb, inner_l3_proto);
 
-	min_headroom = LL_RESERVED_SPACE(rt->dst.dev) + rt->dst.header_len
+	min_headroom = LL_RESERVED_SPACE(rt_dst(rt).dev) + rt_dst(rt).header_len
 			+ STT_HEADER_LEN + sizeof(struct iphdr);
 
 	if (skb_headroom(skb) < min_headroom || skb_header_cloned(skb)) {
@@ -879,12 +882,12 @@ int rpl_stt_xmit_skb(struct sk_buff *skb, struct rtable *rt,
 		skb->next = NULL;
 
 		if (next_skb)
-			dst_clone(&rt->dst);
+			dst_clone(&rt_dst(rt));
 
 		/* Push STT and TCP header. */
 		skb = push_stt_header(skb, tun_id, src_port, dst_port, src,
 				      dst, inner_l3_proto, inner_l4_proto,
-				      dst_mtu(&rt->dst));
+				      dst_mtu(&rt_dst(rt)));
 		if (unlikely(!skb)) {
 			ip_rt_put(rt);
 			goto next;
@@ -1536,15 +1539,17 @@ static struct pernet_operations stt_net_ops = {
 	.size = sizeof(struct stt_net),
 };
 
+DEFINE_COMPAT_PNET_REG_FUNC(device);
+
 int ovs_stt_init_module(void)
 {
-	return register_pernet_subsys(&stt_net_ops);
+	return register_pernet_device(&stt_net_ops);
 }
 EXPORT_SYMBOL_GPL(ovs_stt_init_module);
 
 void ovs_stt_cleanup_module(void)
 {
-	unregister_pernet_subsys(&stt_net_ops);
+	unregister_pernet_device(&stt_net_ops);
 }
 EXPORT_SYMBOL_GPL(ovs_stt_cleanup_module);
 #endif

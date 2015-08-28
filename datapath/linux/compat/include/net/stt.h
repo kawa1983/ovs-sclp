@@ -2,7 +2,8 @@
 #define __NET_STT_H  1
 
 #include <linux/kconfig.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0) && IS_ENABLED(CONFIG_NETFILTER)
+#if (!defined(RHEL_RELEASE_CODE) && LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0) && IS_ENABLED(CONFIG_NETFILTER)) || \
+    (defined(RHEL_RELEASE_CODE) && RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(6,6))
 #include <net/ip_tunnels.h>
 #define OVS_STT
 

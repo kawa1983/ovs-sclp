@@ -67,9 +67,8 @@ static int stt_tnl_get_options(const struct vport *vport,
 			       struct sk_buff *skb)
 {
 	struct stt_port *stt_port = stt_vport(vport);
-	struct inet_sock *sk = inet_sk(stt_port->stt_sock->sock->sk);
 
-	if (nla_put_u16(skb, OVS_TUNNEL_ATTR_DST_PORT, ntohs(sk->inet_sport)))
+	if (nla_put_u16(skb, OVS_TUNNEL_ATTR_DST_PORT, ntohs(inet_sport(stt_port->stt_sock->sock->sk))))
 		return -EMSGSIZE;
 	return 0;
 }
@@ -131,7 +130,7 @@ static int stt_tnl_send(struct vport *vport, struct sk_buff *skb)
 {
 	struct net *net = ovs_dp_get_net(vport->dp);
 	struct stt_port *stt_port = stt_vport(vport);
-	__be16 dport = inet_sk(stt_port->stt_sock->sock->sk)->inet_sport;
+	__be16 dport = inet_sport(stt_port->stt_sock->sock->sk);
 	const struct ovs_key_ipv4_tunnel *tun_key;
 	const struct ovs_tunnel_info *tun_info;
 	struct rtable *rt;
@@ -181,7 +180,7 @@ static int stt_get_egress_tun_info(struct vport *vport, struct sk_buff *skb,
 {
 	struct stt_port *stt_port = stt_vport(vport);
 	struct net *net = ovs_dp_get_net(vport->dp);
-	__be16 dport = inet_sk(stt_port->stt_sock->sock->sk)->inet_sport;
+	__be16 dport = inet_sport(stt_port->stt_sock->sock->sk);
 	__be16 sport = udp_flow_src_port(net, skb, 1, USHRT_MAX, true);
 
 	/* Get tp_src and tp_dst, refert to stt_build_header().

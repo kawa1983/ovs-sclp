@@ -62,3 +62,12 @@ $ sudo ovs-vsctl add-port br0 vnet0
 
 $ sudo ovs-dpctl show  # sclp_sys_4789 (vxlan-sclp) 
 ```
+
+=
+### Known Issues
+
+- Jumbo frames are not supported
+-- MTU size must be set to 1500
+
+- VXLAN extention header fields are not supported
+
